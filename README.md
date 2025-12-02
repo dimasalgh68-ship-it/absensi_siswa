@@ -1,8 +1,8 @@
-# Aplikasi Web Absensi Karyawan QR Code GPS
+# Aplikasi Web Absensi Mahasiswa QR Code GPS
 
-![Aplikasi Web Absensi Karyawan QR Code GPS](./screenshots/hero.png)
+![Aplikasi Web Absensi Mahasiswa QR Code GPS](./screenshots/hero.png)
 
-Aplikasi web absensi karyawan menggunakan QR Code dan GPS.
+Aplikasi web absensi Mahasiswa menggunakan QR Code dan GPS.
 
 ## Teknologi yang Digunakan
 
