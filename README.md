@@ -48,7 +48,7 @@ Pilih salah satu opsi berikut:
 | ---------------------------------------- | ------------------------------------------------------ |
 | ![Scan](./screenshots/presensi-scan.png) | ![Scan mobile](./screenshots/presensi-scan-mobile.png) |
 
-| Pengajuan Absensi                                       | Riwayat Absensi Karyawan                             |
+| Pengajuan Absensi                                       | Riwayat Absensi mahasiswa                             |
 | ------------------------------------------------------- | ---------------------------------------------------- |
 | ![Pengajuan Absensi](./screenshots/pengajuan-izin.jpeg) | ![Riwayat Absensi](./screenshots/presensi-user.jpeg) |
 
