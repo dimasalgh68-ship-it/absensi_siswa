@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TaskSubmission extends Model
 {
-    protected $fillable = ['task_id', 'user_id', 'answer', 'status', 'file_path', 'submitted_at'];
+    protected $fillable = ['task_id', 'user_id', 'answer', 'status', 'file_path', 'link', 'submitted_at'];
 
     protected $casts = [
         'status' => 'string',

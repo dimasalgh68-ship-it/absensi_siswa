@@ -20,16 +20,21 @@ class Attendance extends Model
 
     protected $fillable = [
         'user_id',
-        'barcode_id',
         'date',
         'time_in',
         'time_out',
         'shift_id',
+        'schedule_id', // alias for shift_id
         'latitude',
         'longitude',
         'status',
         'note',
         'attachment',
+        'face_photo_path',
+        'face_photo_out_path',
+        'face_similarity_score',
+        'face_similarity_score_out',
+        'validation_method',
     ];
 
     protected function casts(): array
@@ -41,15 +46,24 @@ class Attendance extends Model
         ];
     }
 
+    // Accessor for schedule_id (alias for shift_id)
+    public function getScheduleIdAttribute()
+    {
+        return $this->shift_id;
+    }
+
+    // Mutator for schedule_id (alias for shift_id)
+    public function setScheduleIdAttribute($value)
+    {
+        $this->attributes['shift_id'] = $value;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function barcode()
-    {
-        return $this->belongsTo(Barcode::class);
-    }
+
 
     public function shift()
     {
@@ -65,6 +79,18 @@ class Attendance extends Model
             'lat' => $this->latitude,
             'lng' => $this->longitude
         ];
+    }
+
+    public function getDurationAttribute()
+    {
+        if (!$this->time_in || !$this->time_out) {
+            return null;
+        }
+
+        $in = Carbon::parse($this->time_in);
+        $out = Carbon::parse($this->time_out);
+
+        return $in->diff($out)->format('%H:%I:%S');
     }
 
     public static function filter(
@@ -106,16 +132,17 @@ class Attendance extends Model
         });
     }
 
-    public function attachmentUrl(): ?Attribute
+    public function attachmentUrl(): Attribute
     {
-        if (!$this->attachment) {
-            return null;
-        }
+        return Attribute::get(function (): ?string {
+            if (!$this->attachment) {
+                return null;
+            }
 
-        return Attribute::get(function (): string {
             if (str_contains($this->attachment, 'https://') || str_contains($this->attachment, 'http://')) {
                 return $this->attachment;
             }
+            
             return Storage::disk(config('jetstream.attachment_disk'))->url($this->attachment);
         });
     }
@@ -129,9 +156,15 @@ class Attendance extends Model
         $ymd = $date->format('Y-m-d');
 
         try {
-            Cache::forget("attendance-$user->id-$monthYear");
-            Cache::forget("attendance-$user->id-$week");
-            Cache::forget("attendance-$user->id-$ymd");
+            // Precise daily key
+            Cache::forget("attendance-{$user->id}-{$ymd}");
+            
+            // Weekly key
+            Cache::forget("attendance-{$user->id}-{$week}");
+            
+            // Monthly key
+            Cache::forget("attendance-{$user->id}-{$monthYear}");
+            
             return true;
         } catch (\Throwable $_) {
             return false;

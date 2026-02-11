@@ -17,8 +17,12 @@ class UsersExport implements FromView
 
     public function view(): View
     {
+        $isTemplate = in_array('template_mode', $this->groups);
+        $users = $isTemplate ? collect([]) : User::whereIn('group', $this->groups)->get();
+
         return view('admin.import-export.export-users', [
-            'users' => User::whereIn('group', $this->groups)->get(),
+            'users' => $users,
+            'isTemplate' => $isTemplate
         ]);
     }
 }

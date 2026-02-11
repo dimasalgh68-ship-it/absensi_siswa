@@ -168,11 +168,11 @@
             @enderror
           </div>
           <div class="w-full">
-            <x-label for="nim">NIM</x-label>
-            <x-input id="nip" class="mt-1 block w-full" type="text" wire:model="form.nip"
+            <x-label for="nisn">NISN</x-label>
+            <x-input id="nisn" class="mt-1 block w-full" type="text" wire:model="form.nisn"
               placeholder="12345678" required />
-            @error('form.nip')
-              <x-input-error for="form.nip" class="mt-2" message="{{ $message }}" />
+            @error('form.nisn')
+              <x-input-error for="form.nisn" class="mt-2" message="{{ $message }}" />
             @enderror
           </div>
         </div>
@@ -339,11 +339,11 @@
             @enderror
           </div>
           <div class="w-full">
-            <x-label for="nim">NIM</x-label>
-            <x-input id="nip" class="mt-1 block w-full" type="text" wire:model="form.nip"
+            <x-label for="nisn">NISN</x-label>
+            <x-input id="nisn" class="mt-1 block w-full" type="text" wire:model="form.nisn"
               placeholder="12345678" required />
-            @error('form.nip')
-              <x-input-error for="form.nip" class="mt-2" message="{{ $message }}" />
+            @error('form.nisn')
+              <x-input-error for="form.nisn" class="mt-2" message="{{ $message }}" />
             @enderror
           </div>
         </div>
@@ -446,8 +446,8 @@
 
         <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
           <div class="mt-4">
-            <x-label for="niM" value="NIM" />
-            <p>{{ $form->user->nim }}</p>
+            <x-label for="nisn" value="NISN" />
+            <p>{{ $form->user->nisn }}</p>
           </div>
           <div class="mt-4">
             <x-label for="email" value="{{ __('Email') }}" />

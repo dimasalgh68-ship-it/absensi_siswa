@@ -31,7 +31,7 @@ class UserFactory extends Factory
     {
         $gender = fake()->randomElement(['male', 'female']);
         return [
-            'nim' => fake()->numerify('#################'),
+            'nisn' => fake()->numerify('#################'),
             'name' => fake()->name($gender),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -41,7 +41,7 @@ class UserFactory extends Factory
             'birth_place' => fake()->city(),
             'address' => fake()->address(),
             'city' => fake()->city(),
-            'group' => 'user',
+            'group' => 'student',
             'password' => static::$password ??= Hash::make('password'),
             'raw_password' => 'password',
             'two_factor_secret' => null,
@@ -70,7 +70,7 @@ class UserFactory extends Factory
     public function admin(bool $superadmin = false): static
     {
         return $this->state(fn (array $attributes) => [
-            'nim' => '0000000000000000',
+            'nisn' => '0000000000000000',
             'phone' => '00000000000',
             'birth_date' => null,
             'birth_place' => null,

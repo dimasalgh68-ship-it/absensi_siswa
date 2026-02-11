@@ -27,7 +27,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'nim',
+        'nisn',
         'name',
         'email',
         'password',
@@ -81,7 +81,7 @@ class User extends Authenticatable
         ];
     }
 
-    public static $groups = ['user', 'admin', 'superadmin'];
+    public static $groups = ['user', 'admin', 'superadmin', 'teacher', 'student'];
 
     final public function getIsUserAttribute(): bool
     {
@@ -98,9 +98,39 @@ class User extends Authenticatable
         return $this->group === 'superadmin';
     }
 
+    final public function getIsTeacherAttribute(): bool
+    {
+        return $this->group === 'teacher';
+    }
+
+    final public function getIsStudentAttribute(): bool
+    {
+        return $this->group === 'student';
+    }
+
     final public function getIsNotAdminAttribute(): bool
     {
         return !$this->isAdmin;
+    }
+
+    final public function canManageStudents(): bool
+    {
+        return $this->isAdmin || $this->isTeacher;
+    }
+
+    final public function canManageFaceRegistration(): bool
+    {
+        return $this->isAdmin || $this->isTeacher;
+    }
+
+    final public function canViewReports(): bool
+    {
+        return $this->isAdmin || $this->isTeacher;
+    }
+
+    final public function canExportData(): bool
+    {
+        return $this->isAdmin || $this->isTeacher;
     }
 
     public function education()

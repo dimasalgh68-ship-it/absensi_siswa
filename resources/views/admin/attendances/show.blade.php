@@ -1,14 +1,12 @@
-<x-app-layout>
+<x-admin-layout>
   <x-slot name="header">
-    <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+    <h1 class="h3 mb-0 text-gray-800">
       {{ __('Detail Absensi') }}
-    </h2>
+    </h1>
   </x-slot>
 
-  <div class="py-12">
-    <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-      <div class="bg-white shadow-xl dark:bg-gray-800 sm:rounded-lg">
-        <div class="p-6 lg:p-8">
+  <div class="card shadow mb-4">
+    <div class="card-body">
           <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
               <x-label for="user" value="{{ __('Nama') }}" />
@@ -16,8 +14,8 @@
             </div>
 
             <div>
-              <x-label for="nim" value="{{ __('NIM') }}" />
-              <x-input id="nim" type="text" class="block w-full mt-1" value="{{ $attendance->user->nim }}" readonly />
+              <x-label for="nim" value="{{ __('NISN') }}" />
+              <x-input id="nim" type="text" class="block w-full mt-1" value="{{ $attendance->user->nisn}}" readonly />
             </div>
 
             <div>
@@ -86,8 +84,4 @@
               {{ __('Kembali') }}
             </x-secondary-button>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</x-app-layout>
+        </x-admin-layout>

@@ -1,12 +1,18 @@
-<nav x-data="{ open: false }" class="sticky top-0 z-50 border-b border-gray-100 bg-gray-100 dark:border-gray-700 dark:bg-gray-800 ">
+<nav x-data="{ open: false }" class="sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
   <!-- Primary Navigation Menu -->
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="flex h-16 justify-between">
       <div class="flex">
         <!-- Logo -->
-        <div class="flex shrink-0 items-center">
-          <a href="{{ Auth::user()->isAdmin ? route('admin.dashboard') : route('home') }}">
+        <div class="flex shrink-0 items-center space-x-3">
+          <a href="{{ Auth::user()->isAdmin ? route('admin.dashboard') : route('home') }}" class="flex items-center space-x-2">
             <x-application-mark class="block h-9 w-auto" />
+            <div class="flex flex-col border-l-2 border-gray-100 pl-3 dark:border-gray-700">
+              <span class="text-sm font-bold tracking-tight text-slate-800 dark:text-white line-height-1">
+                {{ \App\Models\Setting::appName() }}
+              </span>
+              <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-400">Presensi Digital</span>
+            </div>
           </a>
         </div>
 
@@ -16,59 +22,60 @@
             <x-nav-link href="{{ route('admin.dashboard') }}" :active="request()->routeIs('admin.dashboard')">
               {{ __('Dashboard') }}
             </x-nav-link>
-            <x-nav-link href="{{ route('admin.barcodes') }}" :active="request()->routeIs('admin.barcodes')">
-              {{ __('Barcode') }}
+            <x-nav-link href="{{ route('admin.face-registrations') }}" :active="request()->routeIs('admin.face-registrations')">
+              {{ __('Face Registration') }}
             </x-nav-link>
-            <x-nav-link href="{{ route('admin.bills') }}" :active="request()->routeIs('admin.bills')">
-              {{ __('Bills') }}
+            <x-nav-link href="{{ route('admin.office-locations') }}" :active="request()->routeIs('admin.office-locations')">
+              {{ __('Lokasi Sekolah') }}
             </x-nav-link>
             <x-nav-link class="hidden md:inline-flex" href="{{ route('admin.attendances') }}" :active="request()->routeIs('admin.attendances')">
               {{ __('Attendance') }}
             </x-nav-link>
             <x-nav-link class="hidden md:inline-flex" href="{{ route('admin.employees') }}" :active="request()->routeIs('admin.employees')">
-              {{ __('Mahasiswa') }}
+              {{ __('Siswa') }}
             </x-nav-link>
-            <x-nav-link href="{{ route('admin.tasks') }}" :active="request()->routeIs('admin.tasks')">
-              {{ __('Tugas') }}
-            </x-nav-link>
-            <x-nav-dropdown :active="request()->routeIs('admin.masters.*')" triggerClasses="text-nowrap">
+          
+            <x-nav-dropdown :active="request()->routeIs('admin.masters.*')" triggerClasses="text-nowrap" align="left">
               <x-slot name="trigger">
                 {{ __('Master Data') }}
-                <x-heroicon-o-chevron-down class="ms-2 h-5 w-5 text-gray-400" />
+                <x-heroicon-o-chevron-down class="ms-2 h-5 w-5 text-gray-400 transition-transform duration-200" x-bind:class="{ 'rotate-180': dropdownOpen }" />
               </x-slot>
               <x-slot name="content">
                 <x-dropdown-link class="md:hidden" href="{{ route('admin.attendances') }}" :active="request()->routeIs('admin.attendances')">
                   {{ __('Attendance') }}
                 </x-dropdown-link>
                 <x-dropdown-link class="md:hidden" href="{{ route('admin.employees') }}" :active="request()->routeIs('admin.employees')">
-                  {{ __('Mahasiswa') }}
+                  {{ __('Siswa') }}
                 </x-dropdown-link>
                 <x-dropdown-link href="{{ route('admin.masters.division') }}" :active="request()->routeIs('admin.masters.division')">
-                  {{ __('Division') }}
+                  {{ __('Angkatan') }}
                 </x-dropdown-link>
                 <x-dropdown-link href="{{ route('admin.masters.job-title') }}" :active="request()->routeIs('admin.masters.job-title')">
-                  {{ __('Job Title') }}
+                  {{ __('Jurusan') }}
                 </x-dropdown-link>
                 <x-dropdown-link href="{{ route('admin.masters.education') }}" :active="request()->routeIs('admin.masters.education')">
-                  {{ __('Education') }}
+                  {{ __('Jurusan') }}
                 </x-dropdown-link>
                 <x-dropdown-link href="{{ route('admin.masters.shift') }}" :active="request()->routeIs('admin.masters.shift')">
-                  {{ __('Shift') }}
+                  {{ __('Jadwal') }}
                 </x-dropdown-link>
-                <hr>
+                <hr class="border-gray-200 dark:border-gray-600">
                 <x-dropdown-link href="{{ route('admin.masters.admin') }}" :active="request()->routeIs('admin.masters.admin')">
                   {{ __('Admin') }}
                 </x-dropdown-link>
               </x-slot>
             </x-nav-dropdown>
-            <x-nav-dropdown :active="request()->routeIs('admin.import-export.*')" triggerClasses="text-nowrap">
+            <x-nav-link href="{{ route('admin.settings') }}" :active="request()->routeIs('admin.settings')">
+              {{ __('Pengaturan') }}
+            </x-nav-link>
+            <x-nav-dropdown :active="request()->routeIs('admin.import-export.*')" triggerClasses="text-nowrap" align="left">
               <x-slot name="trigger">
                 {{ __('Import & Export') }}
-                <x-heroicon-o-chevron-down class="ms-2 h-5 w-5 text-gray-400" />
+                <x-heroicon-o-chevron-down class="ms-2 h-5 w-5 text-gray-400 transition-transform duration-200" x-bind:class="{ 'rotate-180': dropdownOpen }" />
               </x-slot>
               <x-slot name="content">
                 <x-dropdown-link href="{{ route('admin.import-export.users') }}" :active="request()->routeIs('admin.import-export.users')">
-                  {{ __('Mahasiswa') }}/{{ __('Admin') }}
+                  {{ __('Siswa') }}/{{ __('Admin') }}
                 </x-dropdown-link>
                 <x-dropdown-link href="{{ route('admin.import-export.attendances') }}" :active="request()->routeIs('admin.import-export.attendances')">
                   {{ __('Attendance') }}
@@ -76,21 +83,18 @@
               </x-slot>
             </x-nav-dropdown>
           @else
-                        <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
-                            {{ __('Home') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('user.tasks') }}" :active="request()->routeIs('user.tasks*')">
-                            {{ __('Tugas') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('user.tasks.answers') }}" :active="request()->routeIs('user.tasks.answers')">
-                            {{ __('Jawaban Saya') }}
-                        </x-nav-link>
+            <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
+              {{ __('Home') }}
+            </x-nav-link>
           @endif
         </div>
       </div>
 
       <div class="flex gap-2">
         <div class="hidden sm:ms-6 sm:flex sm:items-center">
+          <button class="mr-2 rounded-lg p-2.5 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-700">
+            <x-heroicon-o-bell class="h-5 w-5" />
+          </button>
           <x-theme-toggle />
 
           <!-- Settings Dropdown -->
@@ -170,45 +174,45 @@
         <x-responsive-nav-link href="{{ route('admin.dashboard') }}" :active="request()->routeIs('admin.dashboard')">
           {{ __('Dashboard') }}
         </x-responsive-nav-link>
-        <x-responsive-nav-link href="{{ route('admin.barcodes') }}" :active="request()->routeIs('admin.barcodes')">
-          {{ __('Barcode') }}
+        <x-responsive-nav-link href="{{ route('admin.face-registrations') }}" :active="request()->routeIs('admin.face-registrations')">
+          {{ __('Face Registration') }}
+        </x-responsive-nav-link>
+        <x-responsive-nav-link href="{{ route('admin.office-locations') }}" :active="request()->routeIs('admin.office-locations')">
+          {{ __('Lokasi Sekolah') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.attendances') }}" :active="request()->routeIs('admin.attendances')">
           {{ __('Attendance') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.employees') }}" :active="request()->routeIs('admin.employees')">
-          {{ __('Mahasiswa') }}
-        </x-responsive-nav-link>
-        <x-responsive-nav-link href="{{ route('admin.bills') }}" :active="request()->routeIs('admin.bills')">
-          {{ __('Bills') }}
+          {{ __('Siswa') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.masters.division') }}" :active="request()->routeIs('admin.masters.division')">
-          {{ __('Division') }}
+          {{ __('Angkatan') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.masters.job-title') }}" :active="request()->routeIs('admin.masters.job-title')">
-          {{ __('Job Title') }}
+          {{ __('Jurusan') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.masters.education') }}" :active="request()->routeIs('admin.masters.education')">
-          {{ __('Education') }}
+          {{ __('Kelas') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.masters.shift') }}" :active="request()->routeIs('admin.masters.shift')">
-          {{ __('Shift') }}
+          {{ __('Jadwal') }}
         </x-responsive-nav-link>
         <x-responsive-nav-link href="{{ route('admin.masters.admin') }}" :active="request()->routeIs('admin.masters.admin')">
           {{ __('Admin Management') }}
         </x-responsive-nav-link>
-        <x-responsive-nav-link href="{{ route('admin.import-export.users') }}" :active="request()->routeIs('admin.import-export')">
-          Import & Export Mahasiswa/Admin
+        <x-responsive-nav-link href="{{ route('admin.settings') }}" :active="request()->routeIs('admin.settings')">
+          {{ __('Pengaturan') }}
         </x-responsive-nav-link>
-        <x-responsive-nav-link href="{{ route('admin.import-export.attendances') }}" :active="request()->routeIs('admin.import-export')">
+        <x-responsive-nav-link href="{{ route('admin.import-export.users') }}" :active="request()->routeIs('admin.import-export.users')">
+          Import & Export Siswa/Admin
+        </x-responsive-nav-link>
+        <x-responsive-nav-link href="{{ route('admin.import-export.attendances') }}" :active="request()->routeIs('admin.import-export.attendances')">
           Import & Export Absensi
         </x-responsive-nav-link>
       @else
         <x-responsive-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
           {{ __('Home') }}
-        </x-responsive-nav-link>
-        <x-responsive-nav-link href="{{ route('user.bills') }}" :active="request()->routeIs('user.bills')">
-          {{ __('Tagihan') }}
         </x-responsive-nav-link>
       @endif
     </div>

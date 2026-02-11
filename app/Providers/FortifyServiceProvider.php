@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use routes;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Fortify;
@@ -29,11 +28,39 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
-                if (Auth::user() && Auth::user()->isAdmin) {
-                    return redirect('/admin');
+                $user = Auth::user();
+                
+                if (!$user) {
+                    return redirect('/login');
                 }
 
-                return redirect('/');
+                // Admin and Teacher redirect to admin dashboard
+                if ($user->isAdmin || $user->isTeacher) {
+                    return redirect()->route('admin.dashboard');
+                }
+
+                // Student and regular users redirect to home
+                return redirect()->route('home');
+            }
+        });
+
+        $this->app->instance(RegisterResponse::class, new class implements RegisterResponse
+        {
+            public function toResponse($request)
+            {
+                $user = Auth::user();
+                
+                if (!$user) {
+                    return redirect('/login');
+                }
+
+                // Admin and Teacher redirect to admin dashboard
+                if ($user->isAdmin || $user->isTeacher) {
+                    return redirect()->route('admin.dashboard');
+                }
+
+                // Student and regular users redirect to home
+                return redirect()->route('home');
             }
         });
 

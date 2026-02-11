@@ -16,8 +16,8 @@ class UserMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if the user is authenticated and belongs to the 'user' group
-        if (Auth::check() && Auth::user()->isUser) {
+        // Check if the user is authenticated and is a student or regular user
+        if (Auth::check() && (Auth::user()->isUser || Auth::user()->isStudent)) {
             return $next($request);
         }
 

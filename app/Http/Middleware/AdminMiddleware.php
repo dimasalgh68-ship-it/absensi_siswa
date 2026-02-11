@@ -16,8 +16,8 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if the user is authenticated and belongs to the 'admin' or 'superadmin' group
-        if (Auth::check() && Auth::user()?->isAdmin) {
+        // Check if the user is authenticated and has management access (Admin/Teacher)
+        if (Auth::check() && Auth::user()?->canManageStudents()) {
             return $next($request);
         }
 

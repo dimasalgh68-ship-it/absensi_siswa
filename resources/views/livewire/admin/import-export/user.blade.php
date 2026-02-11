@@ -1,174 +1,193 @@
 <div>
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+  <div class="row">
     @if ($mode != 'import')
-      <div>
-        <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-          Ekspor Data Mahasiswa/Admin
-        </h3>
-        <form wire:submit.prevent="export">
-          <div>
-            <x-label for="user" class="flex items-center">
-              <x-checkbox value="user" id="user" wire:model.live="groups" />
-              <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Employee') }}</span>
-            </x-label>
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h6 class="mb-0"><i class="fas fa-file-export mr-2"></i>Ekspor Data Siswa/Admin</h6>
           </div>
-          <div class="mt-4">
-            <x-label for="admin" class="flex items-center">
-              <x-checkbox value="admin" id="admin" wire:model.live="groups" />
-              <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Admin') }}</span>
-            </x-label>
+          <div class="card-body">
+            <form wire:submit.prevent="export">
+              <div class="form-group">
+                <label class="font-weight-bold">Pilih Grup yang Akan Diekspor:</label>
+                
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="user" value="user" wire:model.live="groups">
+                  <label class="custom-control-label" for="user">Siswa</label>
+                </div>
+                
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="admin" value="admin" wire:model.live="groups">
+                  <label class="custom-control-label" for="admin">Admin</label>
+                </div>
+                
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="superadmin" value="superadmin" wire:model.live="groups">
+                  <label class="custom-control-label" for="superadmin">Super Admin</label>
+                </div>
+                
+                @error('groups')
+                  <small class="text-danger d-block mt-2">{{ $message }}</small>
+                @enderror
+              </div>
+              
+              <div class="d-flex flex-column gap-2">
+                <button type="button" wire:click="preview" class="btn btn-secondary btn-block">
+                  @if ($mode == 'export')
+                    <i class="fas fa-times mr-1"></i> Batal
+                  @else
+                    <i class="fas fa-eye mr-1"></i> Preview
+                  @endif
+                </button>
+                <button type="submit" class="btn btn-success btn-block">
+                  <i class="fas fa-download mr-1"></i>
+                  {{ $mode == 'export' ? 'Konfirmasi & Ekspor' : 'Ekspor ke Excel' }}
+                </button>
+              </div>
+            </form>
           </div>
-          <div class="mt-4">
-            <x-label for="superadmin" class="flex items-center">
-              <x-checkbox value="superadmin" id="superadmin" wire:model.live="groups" />
-              <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Super Admin') }}</span>
-            </x-label>
-          </div>
-          @error('groups')
-            <x-input-error for="groups" class="mt-4" message="{{ $message }}" />
-          @enderror
-          <div class="mt-4 flex flex-col items-center justify-stretch gap-4">
-            <x-secondary-button type="button" wire:click="preview" class="w-full justify-center">
-              @if ($mode == 'export')
-                {{ __('Cancel') }}
-              @else
-                {{ __('Preview') }}
-              @endif
-            </x-secondary-button>
-            <x-button wire:click="export" class="w-full justify-center">
-              {{ $mode == 'export' ? __('Confirm & Export') : __('Export') }}
-            </x-button>
-          </div>
-        </form>
+        </div>
       </div>
     @endif
+    
     @if ($mode != 'export')
-      <div>
-        <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-          Impor Data Mahasiswa/Admin
-        </h3>
-        <form x-data="{ file: null }" method="post" wire:submit.prevent="import" enctype="multipart/form-data">
-          @csrf
-          <div class="mb-4 flex items-center gap-3">
-            <x-secondary-button class="me-2" type="button" x-on:click.prevent="$refs.file.click()"
-              x-text="file ? 'Ganti File' : 'Pilih File dan Pratinjau'">
-              Pilih File
-            </x-secondary-button>
-            <x-secondary-button class="me-2" type="button" x-show="file"
-              x-on:click.prevent="$refs.file.files[0] = null; file = null; $wire.$set('file', null)">
-              Hapus File
-            </x-secondary-button>
-            <h5 class="text-sm dark:text-gray-200" x-text="file ? file.name : 'File Belum Dipilih'"></h5>
-            <x-input type="file" class="hidden" name="file" x-ref="file"
-              x-on:change="file = $refs.file.files[0]" wire:model.live="file" />
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h6 class="mb-0"><i class="fas fa-file-import mr-2"></i>Impor Data Siswa/Admin</h6>
           </div>
-          <div class="flex items-center justify-stretch">
-            <x-danger-button class="w-full"
-              x-text="file ? '{{ __('Confirm & Import') }} ' + file.name : '{{ __('Import') }}'">
-            </x-danger-button>
+          <div class="card-body">
+            <form x-data="{ file: null }" method="post" wire:submit.prevent="import" enctype="multipart/form-data">
+              @csrf
+              
+              <div class="alert alert-info">
+                <small>
+                  <strong><i class="fas fa-info-circle"></i> Format File:</strong><br>
+                  • Excel (.xlsx, .xls)<br>
+                  • CSV (.csv)<br>
+                  • OpenDocument (.ods)
+                </small>
+              </div>
+              
+              <div class="form-group">
+                <label class="font-weight-bold">Pilih File:</label>
+                <div class="custom-file">
+                  <input type="file" 
+                         class="custom-file-input" 
+                         id="fileInput" 
+                         x-ref="file"
+                         x-on:change="file = $refs.file.files[0]" 
+                         wire:model.live="file"
+                         accept=".csv,.xls,.xlsx,.ods">
+                  <label class="custom-file-label" for="fileInput" x-text="file ? file.name : 'Pilih file...'">
+                    Pilih file...
+                  </label>
+                </div>
+                @error('file')
+                  <small class="text-danger d-block mt-2">{{ $message }}</small>
+                @enderror
+              </div>
+              
+              <div class="d-flex gap-2" x-show="file">
+                <button type="button" 
+                        class="btn btn-secondary flex-fill"
+                        x-on:click.prevent="$refs.file.value = null; file = null; $wire.$set('file', null)">
+                  <i class="fas fa-times mr-1"></i> Hapus File
+                </button>
+                <button type="submit" class="btn btn-danger flex-fill">
+                  <i class="fas fa-upload mr-1"></i> Konfirmasi & Impor
+                </button>
+              </div>
+              
+              <div x-show="!file">
+                <button type="button" class="btn btn-outline-danger btn-block" disabled>
+                  <i class="fas fa-upload mr-1"></i> Pilih File Terlebih Dahulu
+                </button>
+              </div>
+            </form>
+            
+            <hr>
+            
+            <div class="text-center">
+              <a href="{{ route('admin.import-export.users.template') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-download mr-1"></i> Download Template Excel
+              </a>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     @endif
   </div>
+  
   @if ($mode && $previewing)
-    <h3 class="mt-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-      {{ __('Preview') . ' ' . $mode }}
-    </h3>
-    <div class="mt-4 w-full overflow-x-scroll text-sm">
-      @php
-        $trClass = 'divide-x divide-gray-200 dark:divide-gray-700';
-        $thClass = 'px-4 py-3 text-left font-semibold dark:text-white';
-        $tdClass = 'px-4 py-4 text-sm font-medium text-gray-900 dark:text-white';
-      @endphp
-      <table class="w-full divide-y divide-gray-200 border dark:divide-gray-700 dark:border-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-900">
-          <tr class="{{ $trClass }}">
-            <th scope="col" class="px-2 py-3 text-left font-semibold dark:text-white">
-              No
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              NIM
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Name
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Email
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Phone
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Gender
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Birth Date
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Birth Place
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Address
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              City
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Education
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Angkatan
-            </th>
-            <th scope="col" class="{{ $thClass }}">
-              Job Title
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-          @foreach ($users as $user)
-            <tr class="{{ $trClass }}">
-              <td class="px-2 py-4 text-center text-sm font-medium text-gray-900 dark:text-white">
-                {{ $loop->iteration }}
-              </td>
-              <td class="{{ $tdClass }}">
-                {{ $user->nim }}
-              </td>
-              <td class="{{ $tdClass }}">
-                {{ $user->name }}
-              </td>
-              <td class="{{ $tdClass }}">
-                {{ $user->email }}
-              </td>
-              <td class="{{ $tdClass }}">
-                <div class="w-32">{{ $user->phone }}</div>
-              </td>
-              <td class="{{ $tdClass }}">
-                {{ $user->gender }}
-              </td>
-              <td class="{{ $tdClass }} text-nowrap">
-                {{ $user->birth_date?->format('Y-m-d') }}
-              </td>
-              <td class="{{ $tdClass }}">
-                {{ Str::limit($user->birth_place, 20, '...') }}
-              </td>
-              <td class="{{ $tdClass }}">
-                <div class="w-48">{{ Str::limit($user->address, 90, '...') }}</div>
-              </td>
-              <td class="{{ $tdClass }}">{{ $user->city }}</td>
-              <td class="{{ $tdClass }} text-nowrap">
-                {{ $user->education?->name }}
-              </td>
-              <td class="{{ $tdClass }} text-nowrap">
-                {{ $user->division?->name }}
-              </td>
-              <td class="{{ $tdClass }} text-nowrap">
-                {{ $user->jobTitle?->name }}
-              </td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">
+          <i class="fas fa-table mr-2"></i>Preview {{ ucfirst($mode) }}
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th class="text-center" style="width: 50px;">No</th>
+                <th>NISN</th>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Telepon</th>
+                <th>Gender</th>
+                <th>Tanggal Lahir</th>
+                <th>Tempat Lahir</th>
+                <th>Alamat</th>
+                <th>Kota</th>
+                <th>Pendidikan</th>
+                <th>Angkatan</th>
+                <th>Jabatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($users as $user)
+                <tr>
+                  <td class="text-center">{{ $loop->iteration }}</td>
+                  <td>{{ $user->nisn }}</td>
+                  <td>{{ $user->name }}</td>
+                  <td>{{ $user->email }}</td>
+                  <td>{{ $user->phone }}</td>
+                  <td>{{ $user->gender }}</td>
+                  <td>{{ $user->birth_date?->format('Y-m-d') }}</td>
+                  <td>{{ Str::limit($user->birth_place, 20) }}</td>
+                  <td>{{ Str::limit($user->address, 50) }}</td>
+                  <td>{{ $user->city }}</td>
+                  <td>{{ $user->education?->name }}</td>
+                  <td>{{ $user->division?->name }}</td>
+                  <td>{{ $user->jobTitle?->name }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="13" class="text-center text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">Tidak ada data untuk ditampilkan</p>
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+      @if($users && $users->count() > 0)
+        <div class="card-footer">
+          <small class="text-muted">
+            <i class="fas fa-info-circle"></i> Total: <strong>{{ $users->count() }}</strong> data
+          </small>
+        </div>
+      @endif
     </div>
   @endif
 </div>
+
+<style>
+.gap-2 > * + * {
+    margin-left: 0.5rem;
+}
+</style>

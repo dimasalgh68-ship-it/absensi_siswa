@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liveness Detection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+    <script src="/assets/js/liveness-detection.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #video {
+            width: 100%;
+            max-width: 640px;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎭 Liveness Detection Test</h1>
+    
+    <div class="status info">
+        <strong>Instructions:</strong>
+        <ol>
+            <li>Click "Start Camera" to begin</li>
+            <li>Wait for face-api models to load</li>
+            <li>Click "Start Liveness Test"</li>
+            <li>Follow the instructions (blink 2x, move head)</li>
+            <li>Check the results below</li>
+        </ol>
+    </div>
+
+    <video id="video" autoplay playsinline></video>
+    <canvas id="overlay" style="display:none;"></canvas>
+
+    <div class="controls">
+        <button id="startCamera">Start Camera</button>
+        <button id="startTest" disabled>Start Liveness Test</button>
+        <button id="stopTest" disabled>Stop Test</button>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress">0%</div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value" id="blinkCount">0</div>
+            <div class="stat-label">Blinks Detected</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="headMovement">No</div>
+            <div class="stat-label">Head Movement</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="timeElapsed">0s</div>
+            <div class="stat-label">Time Elapsed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="faceDetected">No</div>
+            <div class="stat-label">Face Detected</div>
+        </div>
+    </div>
+
+    <div id="statusMessage" class="status" style="display:none;"></div>
+
+    <div class="status">
+        <strong>Console Log:</strong>
+        <pre id="log" style="max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 4px;"></pre>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const startCameraBtn = document.getElementById('startCamera');
+        const startTestBtn = document.getElementById('startTest');
+        const stopTestBtn = document.getElementById('stopTest');
+        const progress = document.getElementById('progress');
+        const blinkCount = document.getElementById('blinkCount');
+        const headMovement = document.getElementById('headMovement');
+        const timeElapsed = document.getElementById('timeElapsed');
+        const faceDetected = document.getElementById('faceDetected');
+        const statusMessage = document.getElementById('statusMessage');
+        const logElement = document.getElementById('log');
+
+        let stream = null;
+        let detector = null;
+        let detectionInterval = null;
+        let faceApiLoaded = false;
+
+        // Logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}\n`;
+            logElement.textContent += logMessage;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function showStatus(message, type = 'info') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status ${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        // Start camera
+        startCameraBtn.addEventListener('click', async () => {
+            try {
+                log('Starting camera...');
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                });
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    log('Camera started successfully');
+                    startCameraBtn.disabled = true;
+                    loadFaceApi();
+                };
+            } catch (err) {
+                log('Camera error: ' + err.message, 'error');
+                showStatus('Failed to start camera: ' + err.message, 'error');
+            }
+        });
+
+        // Load face-api
+        async function loadFaceApi() {
+            try {
+                log('Loading face-api models...');
+                showStatus('Loading AI models...', 'info');
+                
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+                
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+                
+                faceApiLoaded = true;
+                log('Face-api models loaded successfully');
+                showStatus('AI models loaded. Ready to test!', 'success');
+                
+                startTestBtn.disabled = false;
+                
+                // Initialize detector
+                detector = new LivenessDetector();
+                setupCallbacks();
+                
+            } catch (err) {
+                log('Failed to load face-api: ' + err.message, 'error');
+                showStatus('Failed to load AI models: ' + err.message, 'error');
+            }
+        }
+
+        // Setup callbacks
+        function setupCallbacks() {
+            detector.on('blinkDetected', (count) => {
+                log(`Blink detected! Count: ${count}`);
+                blinkCount.textContent = count;
+            });
+
+            detector.on('headMovementDetected', (movement) => {
+                log(`Head movement detected: yaw=${movement.yaw.toFixed(1)}°, pitch=${movement.pitch.toFixed(1)}°`);
+                headMovement.textContent = 'Yes';
+            });
+
+            detector.on('progress', (prog) => {
+                progress.style.width = prog.percentage + '%';
+                progress.textContent = prog.percentage + '%';
+                timeElapsed.textContent = Math.ceil((Date.now() - detector.startTime) / 1000) + 's';
+            });
+
+            detector.on('livenessConfirmed', (result) => {
+                log('✅ Liveness confirmed!');
+                showStatus('✅ Liveness Test PASSED! You are a real person.', 'success');
+                stopDetection();
+            });
+
+            detector.on('livenessFailed', (reason) => {
+                log('❌ Liveness failed: ' + reason);
+                showStatus('❌ Liveness Test FAILED: ' + reason, 'error');
+                stopDetection();
+            });
+        }
+
+        // Start test
+        startTestBtn.addEventListener('click', () => {
+            log('Starting liveness test...');
+            showStatus('Liveness test started. Please blink 2x and move your head.', 'info');
+            
+            // Reset UI
+            blinkCount.textContent = '0';
+            headMovement.textContent = 'No';
+            timeElapsed.textContent = '0s';
+            progress.style.width = '0%';
+            progress.textContent = '0%';
+            
+            // Start detector
+            detector.start({
+                requiredBlinks: 2,
+                requiredHeadMovement: true,
+                timeLimit: 10000
+            });
+            
+            startTestBtn.disabled = true;
+            stopTestBtn.disabled = false;
+            
+            // Start detection loop
+            startDetection();
+        });
+
+        // Stop test
+        stopTestBtn.addEventListener('click', () => {
+            log('Stopping liveness test...');
+            detector.stop();
+            stopDetection();
+        });
+
+        // Detection loop
+        async function startDetection() {
+            if (detectionInterval) clearInterval(detectionInterval);
+            
+            detectionInterval = setInterval(async () => {
+                if (!faceApiLoaded || !video.videoWidth || !detector.isActive) return;
+
+                try {
+                    const detection = await faceapi
+                        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                        .withFaceLandmarks(true);
+
+                    if (detection) {
+                        faceDetected.textContent = 'Yes';
+                        await detector.process(detection);
+                    } else {
+                        faceDetected.textContent = 'No';
+                    }
+                } catch (err) {
+                    log('Detection error: ' + err.message, 'error');
+                }
+            }, 100);
+        }
+
+        function stopDetection() {
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+            startTestBtn.disabled = false;
+            stopTestBtn.disabled = true;
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>

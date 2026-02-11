@@ -1,10 +1,10 @@
 <div>
   <div class="mb-4 flex-col items-center gap-5 sm:flex-row md:flex md:justify-between lg:mr-4">
     <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200 md:mb-0">
-      Data Mahasiswa
+      Data Siswa
     </h3>
     <x-button wire:click="showCreating">
-      <x-heroicon-o-plus class="mr-2 h-4 w-4" /> Tambah Mahasiswa
+      <x-heroicon-o-plus class="mr-2 h-4 w-4" /> Tambah Siswa
     </x-button>
   </div>
   <div class="mb-1 text-sm dark:text-white">Filter:</div>
@@ -62,7 +62,7 @@
             {{ __('Name') }}
           </th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-            {{ __('NIM') }}
+            {{ __('NISN') }}
           </th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
             {{ __('Email') }}
@@ -98,7 +98,7 @@
             </td>
             <td class="{{ $class }} px-6 py-4 text-sm font-medium text-gray-900 dark:text-white"
               {{ $wireClick }}>
-              {{ $user->nim }}
+              {{ $user->nisn }}
             </td>
             <td class="{{ $class }} px-6 py-4 text-sm font-medium text-gray-900 dark:text-white"
               {{ $wireClick }}>
@@ -132,7 +132,7 @@
 
   <x-confirmation-modal wire:model="confirmingDeletion">
     <x-slot name="title">
-      Hapus Mahasiswa
+      Hapus Siswa
     </x-slot>
 
     <x-slot name="content">
@@ -152,7 +152,7 @@
 
   <x-dialog-modal wire:model="creating">
     <x-slot name="title">
-      Mahasiswa Baru
+      Siswa Baru
     </x-slot>
 
     <form wire:submit="create">
@@ -199,7 +199,7 @@
           </div>
         @endif
         <div class="mt-4">
-          <x-label for="name">Nama Mahasiswa</x-label>
+          <x-label for="name">Nama Siswa</x-label>
           <x-input id="name" class="mt-1 block w-full" type="text" wire:model="form.name" />
           @error('form.name')
             <x-input-error for="form.name" class="mt-2" message="{{ $message }}" />
@@ -215,11 +215,11 @@
             @enderror
           </div>
           <div class="w-full">
-            <x-label for="nim">NIM</x-label>
-            <x-input id="nim" class="mt-1 block w-full" type="text" wire:model="form.nim"
+            <x-label for="nisn">NISN</x-label>
+            <x-input id="nisn" class="mt-1 block w-full" type="text" wire:model="form.nisn"
               placeholder="12345678" required />
-            @error('form.nim')
-              <x-input-error for="form.nim" class="mt-2" message="{{ $message }}" />
+            @error('form.nisn')
+              <x-input-error for="form.nisn" class="mt-2" message="{{ $message }}" />
             @enderror
           </div>
         </div>
@@ -353,7 +353,7 @@
 
   <x-dialog-modal wire:model="editing">
     <x-slot name="title">
-      Edit Mahasiswa
+      Edit Siswa
     </x-slot>
 
     <form wire:submit.prevent="update" id="user-edit">
@@ -402,7 +402,7 @@
           </div>
         @endif
         <div class="mt-4">
-          <x-label for="name">Nama Mahasiswa</x-label>
+          <x-label for="name">Nama Siswa</x-label>
           <x-input id="name" class="mt-1 block w-full" type="text" wire:model="form.name" />
           @error('form.name')
             <x-input-error for="form.name" class="mt-2" message="{{ $message }}" />
@@ -418,11 +418,11 @@
             @enderror
           </div>
           <div class="w-full">
-            <x-label for="nim">NIM</x-label>
-            <x-input id="nim" class="mt-1 block w-full" type="text" wire:model="form.nim"
+            <x-label for="nisn">NISN</x-label>
+            <x-input id="nisn" class="mt-1 block w-full" type="text" wire:model="form.nisn"
               placeholder="12345678" required />
-            @error('form.nim')
-              <x-input-error for="form.nim" class="mt-2" message="{{ $message }}" />
+            @error('form.nisn')
+              <x-input-error for="form.nisn" class="mt-2" message="{{ $message }}" />
             @enderror
           </div>
         </div>
@@ -553,82 +553,149 @@
     </form>
   </x-dialog-modal>
 
-  <x-modal wire:model="showDetail">
-    @if ($form->user)
-      @php
-        $division = $form->user->division ? json_decode($form->user->division)->name : '-';
-        $jobTitle = $form->user->jobTitle ? json_decode($form->user->jobTitle)->name : '-';
-        $education = $form->user->education ? json_decode($form->user->education)->name : '-';
-      @endphp
-      <div class="px-6 py-4">
-        <div class="my-4 flex items-center justify-center">
-          <img class="h-32 w-32 rounded-full object-cover" src="{{ $user->profile_photo_url }}"
-            alt="{{ $user->name }}" />
+  <x-dialog-modal wire:model="showDetail" maxWidth="2xl">
+    <x-slot name="title">
+        <div class="flex items-center justify-between">
+            <span class="font-outfit font-bold text-xl">Detail Siswa</span>
+            <button wire:click="$set('showDetail', false)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+    </x-slot>
 
-        <div class="text-center text-lg font-medium text-gray-900 dark:text-gray-100">
-          {{ $form->user->name }}
-        </div>
+    <x-slot name="content">
+      @if ($form->user)
+        <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden mt-2">
+            <!-- Header Section with Profile Photo -->
+            <div class="relative pb-6 border-bottom border-light text-center">
+                <div class="flex flex-col items-center">
+                    <div class="profile-avatar mb-4" style="width: 120px; height: 120px; padding: 4px; background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%); border-radius: 50%;">
+                        <img class="h-full w-full rounded-full object-cover border-4 border-white shadow-lg" 
+                             src="{{ $form->user->profile_photo_url }}"
+                             alt="{{ $form->user->name }}" />
+                    </div>
+                    <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-1 font-outfit">{{ $form->user->name }}</h4>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="badge badge-primary px-3 py-1 rounded-pill" style="background: rgba(79, 70, 229, 0.1); color: var(--primary-color);">
+                            {{ $form->user->division->name ?? '-' }}
+                        </span>
+                        <span class="badge badge-light px-3 py-1 rounded-pill border">
+                            {{ $form->user->jobTitle->name ?? '-' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-        <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
-          <div class="mt-4">
-            <x-label for="nim" value="NIM" />
-            <p>{{ $form->user->nim }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="email" value="{{ __('Email') }}" />
-            <p>{{ $form->user->email }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="phone" value="{{ __('Phone') }}" />
-            <p>{{ $form->user->phone }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="gender" value="{{ __('Gender') }}" />
-            <p>{{ __($form->user->gender) }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="birth_date" value="{{ __('Birth Date') }}" />
-            @if ($form->user->birth_date)
-              <p>{{ \Illuminate\Support\Carbon::parse($form->user->birth_date)->format('D d M Y') }}</p>
-            @else
-              <p>-</p>
-            @endif
-          </div>
-          <div class="mt-4">
-            <x-label for="birth_place" value="{{ __('Birth Place') }}" />
-            <p>{{ $form->user->birth_place ?? '-' }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="address" value="{{ __('Address') }}" />
-            @if (empty($form->user->address))
-              <p>-</p>
-            @else
-              <p>{{ $form->user->address }}</p>
-            @endif
-          </div>
-          <div class="mt-4">
-            <x-label for="city" value="{{ __('City') }}" />
-            @if (empty($form->user->city))
-              <p>-</p>
-            @else
-              <p>{{ $form->user->city }}</p>
-            @endif
-          </div>
-          <div class="mt-4">
-            <x-label for="job_title_id" value="{{ __('Job Title') }}" />
-            <p>{{ $jobTitle }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="division_id" value="{{ __('Division') }}" />
-            <p>{{ $division }}</p>
-          </div>
-          <div class="mt-4">
-            <x-label for="education_id" value="{{ __('Last Education') }}" />
-            <p>{{ $education }}</p>
-          </div>
+            <!-- Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
+                <!-- Data Pribadi Section -->
+                <div class="space-y-4">
+                    <h6 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Identitas & Kontak</h6>
+                    
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-id-card fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">NISN</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->nisn ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-envelope fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Email</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-phone fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">No. Telepon</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->phone ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-venus-mars fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Jenis Kelamin</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ __($form->user->gender) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alamat & Pendidikan Section -->
+                <div class="space-y-4">
+                    <h6 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Latar Belakang</h6>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-graduation-cap fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Pendidikan Terakhir</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->education->name ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-birthday-cake fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Tgl & Tempat Lahir</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                {{ $form->user->birth_place ?? '-' }}, 
+                                {{ $form->user->birth_date ? \Illuminate\Support\Carbon::parse($form->user->birth_date)->format('d F Y') : '-' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-map-marker-alt fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Domisili</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->city ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-home fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Alamat Lengkap</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400 italic">
+                                {{ $form->user->address ?? '-' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    @endif
-  </x-modal>
+      @endif
+    </x-slot>
+
+    <x-slot name="footer">
+        <div class="flex gap-2">
+            <x-secondary-button wire:click="$set('showDetail', false)" class="rounded-xl">
+                Tutup
+            </x-secondary-button>
+            <x-button wire:click="edit('{{ $form->user->id ?? '' }}')" class="rounded-xl">
+                <i class="fas fa-edit mr-2"></i> Edit Data
+            </x-button>
+        </div>
+    </x-slot>
+  </x-dialog-modal>
 </div>

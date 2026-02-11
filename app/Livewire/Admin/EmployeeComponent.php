@@ -39,6 +39,7 @@ class EmployeeComponent extends Component
         $this->form->resetErrorBag();
         $this->form->reset();
         $this->creating = true;
+        $this->form->group = 'student';
         $this->form->password = 'password';
     }
 
@@ -88,10 +89,10 @@ class EmployeeComponent extends Component
 
     public function render()
     {
-        $users = User::where('group', 'user')
+        $users = User::where('group', 'student',)
             ->when($this->search, function (Builder $q) {
                 return $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('nim', 'like', '%' . $this->search . '%')
+                    ->orWhere('nisn', 'like', '%' . $this->search . '%')
                     ->orWhere('email', 'like', '%' . $this->search . '%')
                     ->orWhere('phone', 'like', '%' . $this->search . '%');
             })

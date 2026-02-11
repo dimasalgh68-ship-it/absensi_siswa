@@ -106,7 +106,7 @@
                                     @foreach($users as $user)
                                         <label class="flex items-center">
                                             <input wire:model="selectedUsers" type="checkbox" value="{{ $user->id }}" class="mr-2">
-                                            {{ $user->name }} ({{ $user->nim }})
+                                            {{ $user->name }} (NISN: {{ $user->nisn}})
                                         </label>
                                     @endforeach
                                 </div>
@@ -195,7 +195,7 @@
                                     @foreach($users as $user)
                                         <label class="flex items-center">
                                             <input wire:model="selectedUsers" type="checkbox" value="{{ $user->id }}" class="mr-2">
-                                            {{ $user->name }} ({{ $user->nim }})
+                                            {{ $user->name }} (NISN: {{ $user->nisn}})
                                         </label>
                                     @endforeach
                                 </div>

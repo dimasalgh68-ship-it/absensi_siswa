@@ -10,22 +10,9 @@ class userSeeder extends Seeder
 {
     public function run()
     {
-        $faker = Faker::create('id_ID');
-
-        for ($i = 0; $i < 50; $i++) {
-            user::create([
-                'nama' => $faker->name,
-                'nim' => $faker->numerify('22######'),
-                'jurusan' => $faker->randomElement([
-                    'Teknik Informatika',
-                    'Teknik Elektro',
-                    'Teknik Komputer',
-                    'Teknik Mesin',
-                ]),
-                'email' => $faker->unique()->safeEmail,
-                'no_hp' => $faker->phoneNumber,
-                'alamat' => $faker->address,
-            ]);
-        }
+        // Use the factory to create 50 students with correct structure
+        User::factory(50)->create([
+            'group' => 'student'
+        ]);
     }
 }

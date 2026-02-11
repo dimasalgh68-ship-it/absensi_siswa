@@ -149,7 +149,7 @@ class BillsComponent extends Component
             ->when($this->search, function ($query) {
                 $query->whereHas('user', function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('nim', 'like', '%' . $this->search . '%');
+                      ->orWhere('nisn', 'like', '%' . $this->search . '%');
                 })
                 ->orWhere('description', 'like', '%' . $this->search . '%');
             })

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tentang - {{ config('app.name', 'Absensi Mahasiswa') }}</title>
+    <title>Tentang - {{ config('app.name', 'Absensi Siswa') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=outfit:400,500,600,700|inter:400,500,600&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -49,7 +49,7 @@
             <div class="flex items-center justify-between h-20">
                 <div class="flex-shrink-0">
                     <a href="{{ url('/') }}" class="text-2xl font-bold tracking-tighter">
-                        <span class="text-blue-400">Absensi</span><span class="text-white">Mahasiswa</span>
+                        <span class="text-blue-400">Absensi</span><span class="text-white">Siswa</span>
                     </a>
                 </div>
                 <div class="hidden md:block">
@@ -89,7 +89,7 @@
             <div class="glass p-8 md:p-12 rounded-3xl mb-12">
                 <h2 class="text-2xl font-bold mb-6">Misi Kami</h2>
                 <p class="text-gray-300 leading-relaxed mb-6">
-                    Absensi Mahasiswa hadir untuk menjawab tantangan administrasi akademik di era digital. Kami berkomitmen untuk menyediakan platform pencatatan kehadiran yang tidak hanya akurat, tetapi juga mudah digunakan oleh dosen dan mahasiswa.
+                    Absensi Siswa hadir untuk menjawab tantangan administrasi akademik di era digital. Kami berkomitmen untuk menyediakan platform pencatatan kehadiran yang tidak hanya akurat, tetapi juga mudah digunakan oleh guru dan siswa.
                 </p>
                 <p class="text-gray-300 leading-relaxed">
                     Dengan memanfaatkan teknologi terkini, kami menghilangkan kerumitan presensi manual, mengurangi penggunaan kertas, dan memberikan transparansi data secara real-time.
@@ -113,7 +113,7 @@
     <footer class="border-t border-white/10 bg-black/20 backdrop-blur-lg relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="text-center">
-                <p class="text-gray-500 text-sm">© {{ date('Y') }} Absensi Mahasiswa. All rights reserved.</p>
+                <p class="text-gray-500 text-sm">© {{ date('Y') }} Absensi Siswa. All rights reserved.</p>
             </div>
         </div>
     </footer>

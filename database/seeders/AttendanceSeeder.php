@@ -25,7 +25,7 @@ class AttendanceSeeder extends Seeder
             if ($date->isWeekend()) continue;
 
             /** @var User[] */
-            $users = User::inRandomOrder()->where('group', 'user')->limit(5)->get();
+            $users = User::inRandomOrder()->where('group', 'student')->limit(5)->get();
 
             foreach ($users as $user) {
                 $status = fake()->randomElement($statuses);

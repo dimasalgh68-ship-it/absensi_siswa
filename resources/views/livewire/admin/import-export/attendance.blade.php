@@ -1,143 +1,247 @@
 <div>
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+  <div class="row">
     @if ($mode != 'import')
-      <div>
-        <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-          Ekspor Data Absensi
-        </h3>
-        <form wire:submit.prevent="export">
-          <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-            <x-label for="year" value="Per Tahun"></x-label>
-            <x-input type="number" min="1970" max="2099" name="year" id="year" wire:model.live="year" />
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h6 class="mb-0"><i class="fas fa-file-export mr-2"></i>Ekspor Data Absensi</h6>
           </div>
-          <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-            <x-label for="month" value="Per Bulan"></x-label>
-            <x-input type="month" name="month" id="month" wire:model.live="month" />
+          <div class="card-body">
+            <form wire:submit.prevent="export">
+              <div class="form-group">
+                <label for="year">
+                  <i class="fas fa-calendar-alt text-primary"></i> Filter Per Tahun
+                </label>
+                <input type="number" 
+                       class="form-control" 
+                       id="year" 
+                       name="year"
+                       min="1970" 
+                       max="2099" 
+                       wire:model.live="year"
+                       placeholder="2024">
+              </div>
+              
+              <div class="form-group">
+                <label for="month">
+                  <i class="fas fa-calendar text-info"></i> Filter Per Bulan (Opsional)
+                </label>
+                <input type="month" 
+                       class="form-control" 
+                       id="month" 
+                       name="month"
+                       wire:model.live="month">
+                <small class="form-text text-muted">Kosongkan untuk ekspor seluruh tahun</small>
+              </div>
+              
+              <div class="form-group">
+                <label for="division">
+                  <i class="fas fa-building text-warning"></i> Filter Division (Opsional)
+                </label>
+                <select class="form-control" id="division" name="division" wire:model.live="division">
+                  <option value="">Semua Division</option>
+                  @foreach (App\Models\Division::all() as $division)
+                    <option value="{{ $division->id }}">{{ $division->name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="jobTitle">
+                  <i class="fas fa-briefcase text-success"></i> Filter Job Title (Opsional)
+                </label>
+                <select class="form-control" id="jobTitle" name="job_title" wire:model.live="job_title">
+                  <option value="">Semua Job Title</option>
+                  @foreach (App\Models\JobTitle::all() as $jobTitle)
+                    <option value="{{ $jobTitle->id }}">{{ $jobTitle->name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="education">
+                  <i class="fas fa-graduation-cap text-danger"></i> Filter Education (Opsional)
+                </label>
+                <select class="form-control" id="education" name="education" wire:model.live="education">
+                  <option value="">Semua Education</option>
+                  @foreach (App\Models\Education::all() as $education)
+                    <option value="{{ $education->id }}">{{ $education->name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              
+              <div class="d-flex flex-column gap-2">
+                <button type="button" wire:click="preview" class="btn btn-secondary btn-block">
+                  @if ($mode == 'export')
+                    <i class="fas fa-times mr-1"></i> Batal
+                  @else
+                    <i class="fas fa-eye mr-1"></i> Preview
+                  @endif
+                </button>
+                <button type="submit" class="btn btn-success btn-block" wire:loading.attr="disabled">
+                  <i class="fas fa-download mr-1"></i>
+                  <span wire:loading.remove>Ekspor ke Excel</span>
+                  <span wire:loading>Mengekspor...</span>
+                </button>
+              </div>
+            </form>
           </div>
-          <x-select id="division" name="division" class="mb-4" wire:model.live="division">
-            <option value="">{{ __('Select Division') }}</option>
-            @foreach (App\Models\Division::all() as $division)
-              <option value="{{ $division->id }}">
-                {{ $division->name }}
-              </option>
-            @endforeach
-          </x-select>
-          <x-select id="jobTitle" name="job_title" class="mb-4" wire:model.live="job_title">
-            <option value="">{{ __('Select Job Title') }}</option>
-            @foreach (App\Models\JobTitle::all() as $jobTitle)
-              <option value="{{ $jobTitle->id }}">
-                {{ $jobTitle->name }}
-              </option>
-            @endforeach
-          </x-select>
-          <x-select id="education" name="education" class="mb-4" wire:model.live="education">
-            <option value="">{{ __('Select Education') }}</option>
-            @foreach (App\Models\Education::all() as $education)
-              <option value="{{ $education->id }}">
-                {{ $education->name }}
-              </option>
-            @endforeach
-          </x-select>
-          <div class="flex flex-col items-center justify-stretch gap-4">
-            <x-secondary-button type="button" wire:click="preview" class="w-full justify-center">
-              @if ($mode == 'export')
-                {{ __('Cancel') }}
-              @else
-                {{ __('Preview') }}
-              @endif
-            </x-secondary-button>
-            <x-button class="w-full justify-center" wire:loading.attr="disabled">
-              {{ __('Export') }}
-            </x-button>
-          </div>
-        </form>
+        </div>
       </div>
     @endif
+    
     @if ($mode != 'export')
-      <div>
-        <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-          Impor Data Absensi
-        </h3>
-        <form x-data="{ file: null }" wire:submit.prevent="import" method="post" enctype="multipart/form-data">
-          @csrf
-          <div class="mb-4 flex items-center gap-3">
-            <x-secondary-button class="me-2" type="button" x-on:click.prevent="$refs.file.click()"
-              x-text="file ? 'Ganti File' : 'Pilih File dan Pratinjau'">
-              Pilih File
-            </x-secondary-button>
-            <x-secondary-button class="me-2" type="button" x-show="file"
-              x-on:click.prevent="$refs.file.files[0] = null; file = null; $wire.$set('file', null)">
-              Hapus File
-            </x-secondary-button>
-            <h5 class="text-sm dark:text-gray-200" x-text="file ? file.name : 'File Belum Dipilih'"></h5>
-            <x-input type="file" class="hidden" name="file" x-ref="file"
-              x-on:change="file = $refs.file.files[0]" wire:model.live="file" />
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h6 class="mb-0"><i class="fas fa-file-import mr-2"></i>Impor Data Absensi</h6>
           </div>
-          <div class="flex items-center justify-stretch">
-            <x-danger-button class="w-full"
-              x-text="file ? '{{ __('Import') }} ' + file.name : '{{ __('Import') }}'">
-            </x-danger-button>
+          <div class="card-body">
+            <form x-data="{ file: null }" wire:submit.prevent="import" method="post" enctype="multipart/form-data">
+              @csrf
+              
+              <div class="alert alert-info">
+                <small>
+                  <strong><i class="fas fa-info-circle"></i> Format File:</strong><br>
+                  • Excel (.xlsx, .xls)<br>
+                  • CSV (.csv)<br>
+                  • OpenDocument (.ods)
+                </small>
+              </div>
+              
+              <div class="form-group">
+                <label class="font-weight-bold">Pilih File:</label>
+                <div class="custom-file">
+                  <input type="file" 
+                         class="custom-file-input" 
+                         id="fileInputAttendance" 
+                         x-ref="file"
+                         x-on:change="file = $refs.file.files[0]" 
+                         wire:model.live="file"
+                         accept=".csv,.xls,.xlsx,.ods">
+                  <label class="custom-file-label" for="fileInputAttendance" x-text="file ? file.name : 'Pilih file...'">
+                    Pilih file...
+                  </label>
+                </div>
+                @error('file')
+                  <small class="text-danger d-block mt-2">{{ $message }}</small>
+                @enderror
+              </div>
+              
+              <div class="d-flex gap-2" x-show="file">
+                <button type="button" 
+                        class="btn btn-secondary flex-fill"
+                        x-on:click.prevent="$refs.file.value = null; file = null; $wire.$set('file', null)">
+                  <i class="fas fa-times mr-1"></i> Hapus File
+                </button>
+                <button type="submit" class="btn btn-danger flex-fill">
+                  <i class="fas fa-upload mr-1"></i> Konfirmasi & Impor
+                </button>
+              </div>
+              
+              <div x-show="!file">
+                <button type="button" class="btn btn-outline-danger btn-block" disabled>
+                  <i class="fas fa-upload mr-1"></i> Pilih File Terlebih Dahulu
+                </button>
+              </div>
+            </form>
+            
+            <hr>
+            
+            <div class="text-center">
+              <a href="{{ route('admin.import-export.attendances.template') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-download mr-1"></i> Download Template Excel
+              </a>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
     @endif
   </div>
+  
   @if ($mode && $previewing)
-    <h3 class="mt-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-      {{ __('Preview') . ' ' . $mode }}
-    </h3>
-    <div class="mt-4 w-full overflow-x-scroll text-sm">
-      @php
-        $trClass = 'divide-x divide-gray-200 dark:divide-gray-700';
-        $thClass = 'px-4 py-3 text-left font-semibold dark:text-white';
-        $tdClass = 'px-4 py-4 text-sm font-medium text-gray-900 dark:text-white';
-      @endphp
-      <table class="w-full divide-y divide-gray-200 border dark:divide-gray-700 dark:border-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-900">
-          <tr class="{{ $trClass }}">
-            <th scope="col" class="px-2 py-3 text-left font-semibold dark:text-white">
-              No
-            </th>
-            <th class="{{ $thClass }}">Date</th>
-            <th class="{{ $thClass }}">Name</th>
-            <th class="{{ $thClass }}">NIM</th>
-            <th class="{{ $thClass }} text-nowrap">Time In</th>
-            <th class="{{ $thClass }} text-nowrap">Time Out</th>
-            <th class="{{ $thClass }}">Shift</th>
-            <th class="{{ $thClass }} text-nowrap">Barcode Id</th>
-            <th class="{{ $thClass }}">Coordinates</th>
-            <th class="{{ $thClass }}">Status</th>
-            <th class="{{ $thClass }}">Note</th>
-            <th class="{{ $thClass }}">Attachment</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-          @foreach ($attendances as $attendance)
-            <tr class="{{ $trClass }}">
-              <td class="px-2 py-4 text-center text-sm font-medium text-gray-900 dark:text-white">
-                {{ $loop->iteration }}
-              </td>
-              <td class="{{ $tdClass }} text-nowrap">{{ $attendance->date?->format('Y-m-d') }}</td>
-              <td class="{{ $tdClass }}">{{ $attendance->user?->name }}</td>
-              <td class="{{ $tdClass }}">{{ $attendance->user?->nip }}</td>
-              <td class="{{ $tdClass }}">{{ $attendance->time_in?->format('H:i:s') }}</td>
-              <td class="{{ $tdClass }}">{{ $attendance->time_out?->format('H:i:s') }}</td>
-              <td class="{{ $tdClass }} text-nowrap">{{ $attendance->shift?->name }}</td>
-              <td class="{{ $tdClass }}">{{ $attendance->barcode_id }}</td>
-              <td class="{{ $tdClass }}">
-                {{ $attendance->lat_lng ? $attendance->latitude . ',' . $attendance->longitude : null }}
-              </td>
-              <td class="{{ $tdClass }} text-nowrap">{{ __($attendance->status) }}</td>
-              <td class="{{ $tdClass }}">
-                <div class="w-48">{{ Str::limit($attendance->note, 30, '...') }}</div>
-              </td>
-              <td class="{{ $tdClass }}">
-                <img src="{{ $attendance->attachment }}" class="max-h-48 object-contain">
-              </td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0">
+          <i class="fas fa-table mr-2"></i>Preview {{ ucfirst($mode) }}
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th class="text-center" style="width: 50px;">No</th>
+                <th>Tanggal</th>
+                <th>Nama</th>
+                <th>NISN</th>
+                <th>Jam Masuk</th>
+                <th>Jam Keluar</th>
+                <th>Shift</th>
+                <th>Barcode ID</th>
+                <th>Koordinat</th>
+                <th>Status</th>
+                <th>Catatan</th>
+                <th>Lampiran</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($attendances as $attendance)
+                <tr>
+                  <td class="text-center">{{ $loop->iteration }}</td>
+                  <td>{{ $attendance->date?->format('Y-m-d') }}</td>
+                  <td>{{ $attendance->user?->name }}</td>
+                  <td>{{ $attendance->user?->nisn}}</td>
+                  <td>{{ $attendance->time_in?->format('H:i:s') }}</td>
+                  <td>{{ $attendance->time_out?->format('H:i:s') }}</td>
+                  <td>{{ $attendance->shift?->name }}</td>
+                  <td>{{ $attendance->barcode_id }}</td>
+                  <td>
+                    @if($attendance->lat_lng)
+                      {{ $attendance->latitude }}, {{ $attendance->longitude }}
+                    @else
+                      -
+                    @endif
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ $attendance->status == 'present' ? 'success' : ($attendance->status == 'late' ? 'warning' : 'danger') }}">
+                      {{ __($attendance->status) }}
+                    </span>
+                  </td>
+                  <td>{{ Str::limit($attendance->note, 30) }}</td>
+                  <td>
+                    @if($attendance->attachment)
+                      <img src="{{ $attendance->attachment }}" class="img-thumbnail" style="max-height: 100px;">
+                    @else
+                      -
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="12" class="text-center text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">Tidak ada data untuk ditampilkan</p>
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+      @if($attendances && $attendances->count() > 0)
+        <div class="card-footer">
+          <small class="text-muted">
+            <i class="fas fa-info-circle"></i> Total: <strong>{{ $attendances->count() }}</strong> data absensi
+          </small>
+        </div>
+      @endif
     </div>
   @endif
 </div>
+
+<style>
+.gap-2 > * + * {
+    margin-left: 0.5rem;
+}
+</style>

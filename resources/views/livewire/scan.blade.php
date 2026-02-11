@@ -1,4 +1,4 @@
-<div class="w-full">
+<div class="w-full bg-white dark:bg-gray-900 rounded-[1.25rem] p-4 md:p-6">
   @php
     use Illuminate\Support\Carbon;
   @endphp
@@ -37,11 +37,13 @@
     <script src="{{ url('/assets/js/html5-qrcode.min.js') }}"></script>
   @endif
 
-  <div class="flex flex-col gap-4 md:flex-row">
+  <div class="flex flex-col lg:flex-row gap-8">
+    {{-- Left Column: Scanner --}}
     @if (!$isAbsence)
-      <div class="flex flex-col gap-4">
-        <div>
-          <x-select id="shift" class="mt-1 block w-full" wire:model="shift_id" disabled="{{ !is_null($attendance) }}">
+      <div class="w-full lg:w-1/2 flex flex-col gap-4">
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+          <label for="shift" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pilih Shift</label>
+          <x-select id="shift" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500" wire:model="shift_id" disabled="{{ !is_null($attendance) }}">
             <option value="">{{ __('Select Shift') }}</option>
             @foreach ($shifts as $shift)
               <option value="{{ $shift->id }}" {{ $shift->id == $shift_id ? 'selected' : '' }}>
@@ -50,122 +52,151 @@
             @endforeach
           </x-select>
           @error('shift_id')
-            <x-input-error for="shift" class="mt-2" message={{ $message }} />
+            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
           @enderror
         </div>
-        <div class="flex justify-center outline outline-gray-100 dark:outline-slate-700" wire:ignore>
-          <div id="scanner" class="min-h-72 sm:min-h-96 w-72 rounded-sm outline-dashed outline-slate-500 sm:w-96">
-          </div>
+
+        <div class="flex justify-center bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden relative aspect-square" wire:ignore>
+            <div id="scanner" class="w-full h-full object-cover"></div>
+            <div class="absolute inset-0 pointer-events-none border-[3px] border-white/30 rounded-2xl z-10"></div>
+        </div>
+        
+        <div class="text-center">
+             <p class="text-sm text-gray-500 dark:text-gray-400">Pastikan QR Code berada di dalam kotak area scan.</p>
         </div>
       </div>
     @endif
-    <div class="w-full">
-      <h4 id="scanner-error" class="mb-3 text-lg font-semibold text-red-500 dark:text-red-400 sm:text-xl" wire:ignore>
-      </h4>
-      <h4 id="scanner-result" class="mb-3 hidden text-lg font-semibold text-green-500 dark:text-green-400 sm:text-xl">
-        {{ $successMsg }}
-      </h4>
-      <h4 id="latlng" class="mb-3 text-lg font-semibold text-gray-600 dark:text-gray-100 sm:text-xl">
-        {{ __('Date') . ': ' . now()->format('d/m/Y') }}<br>
 
-        @if (!is_null($currentLiveCoords))
-          <div class="flex justify-between">
-            <a href="{{ \App\Helpers::getGoogleMapsUrl($currentLiveCoords[0], $currentLiveCoords[1]) }}" target="_blank"
-              class="underline hover:text-blue-400">
-              {{ __('Your location') . ': ' . $currentLiveCoords[0] . ', ' . $currentLiveCoords[1] }}
-            </a>
-            <button class="text-nowrap h-6" onclick="toggleCurrentMap()" id="toggleCurrentMap">
-              <x-heroicon-s-chevron-down class="mr-2 h-5 w-5" />
-            </button>
-          </div>
-        @else
-          {{ __('Your location') . ': -, -' }}
-        @endif
-        <div class="my-6 h-72 w-full md:h-96" id="currentMap" wire:ignore></div>
-      </h4>
-      <div class="grid grid-cols-2 gap-3 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-        <div
-          class="{{ $attendance?->status == 'late' ? 'bg-blue-200 dark:bg-blue-900' : 'bg-blue-200 dark:bg-blue-900' }} flex items-center justify-between rounded-md px-4 py-2 text-blue-800 dark:text-white dark:shadow-gray-700">
-          <div>
-            <h4 class="text-lg font-semibold md:text-xl">Absen Masuk</h4>
-            <div class="flex flex-col sm:flex-row">
-              <span>
-                @if ($isAbsence)
-                  {{ __($attendance?->status) ?? '-' }}
-                @else
-                  {{ $attendance?->time_in ? Carbon::parse($attendance?->time_in)->format('H:i:s') : 'Belum Absen' }}
-                @endif
-              </span>
-              @if ($attendance?->status == 'late')
-                <span class="mx-1 hidden sm:inline-block">|</span>
-              @endif
-              <span>{{ $attendance?->status == 'late' ? 'Terlambat: Ya' : '' }}</span>
-            </div>
-          </div>
-          <x-heroicon-o-arrows-pointing-in class="h-5 w-5" />
-        </div>
-        <div
-          class="flex items-center justify-between rounded-md bg-blue-200 px-4 py-2 text-red-500 dark:bg-blue-900 dark:text-white dark:shadow-gray-800">
-          <div>
-            <h4 class="text-lg font-semibold md:text-xl">Absen Keluar</h4>
-            @if ($isAbsence)
-              {{ __($attendance?->status) ?? '-' }}
-            @else
-              {{ $attendance?->time_out ? Carbon::parse($attendance?->time_out)->format('H:i:s') : 'Belum Absen' }}
-            @endif
-          </div>
-          <x-heroicon-o-arrows-pointing-out class="h-5 w-5" />
-        </div>
-        <button
-          class="col-span-2 flex items-center justify-between rounded-md bg-blue-200 px-4 py-2 text-gray-800 dark:bg-purple-900 dark:text-white dark:shadow-gray-700 md:col-span-1 lg:col-span-2 xl:col-span-1"
-          {{ is_null($attendance?->lat_lng) ? 'disabled' : 'onclick=toggleMap()' }} id="toggleMap">
-          <div>
-            <h4 class="text-lg font-semibold md:text-xl">Koordinat Absen</h4>
-            @if (is_null($attendance?->lat_lng))
-              Belum Absen
-            @else
-              <a href="{{ \App\Helpers::getGoogleMapsUrl($attendance?->latitude, $attendance?->longitude) }}"
-                target="_blank" class="underline hover:text-blue-400">
-                {{ $attendance?->latitude . ', ' . $attendance?->longitude }}
-              </a>
-            @endif
-          </div>
-          <x-heroicon-o-map-pin class="h-6 w-6" />
-        </button>
+    {{-- Right Column: Info & Actions --}}
+    <div class="w-full {{ !$isAbsence ? 'lg:w-1/2' : 'lg:w-full' }} space-y-6">
+      
+      {{-- Status Messages --}}
+      <div>
+          <h4 id="scanner-error" class="text-center text-sm font-semibold text-red-500 dark:text-red-400" wire:ignore></h4>
+          <h4 id="scanner-result" class="hidden text-center text-lg font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl border border-green-200 dark:border-green-800">
+            {{ $successMsg }}
+          </h4>
       </div>
 
-      <div class="my-6 h-52 w-full md:h-64" id="map" wire:ignore></div>
+      {{-- Location Info Card --}}
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <x-heroicon-o-map-pin class="w-5 h-5 text-blue-500"/>
+                Lokasi Anda
+            </h3>
+            <span class="text-xs font-medium px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                {{ now()->format('d M Y') }}
+            </span>
+        </div>
+        
+        <div class="text-sm text-gray-600 dark:text-gray-300">
+             @if (!is_null($currentLiveCoords))
+              <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center">
+                    <a href="{{ \App\Helpers::getGoogleMapsUrl($currentLiveCoords[0], $currentLiveCoords[1]) }}" target="_blank"
+                    class="text-blue-600 hover:underline truncate max-w-[200px]">
+                    {{ $currentLiveCoords[0] . ', ' . $currentLiveCoords[1] }}
+                    </a>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="toggleCurrentMap()" id="toggleCurrentMap">
+                    <x-heroicon-s-chevron-down class="h-5 w-5" />
+                    </button>
+                </div>
+                <div class="h-40 w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 mt-2" id="currentMap" wire:ignore></div>
+              </div>
+            @else
+              <div class="flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
+                  <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  <span>Mendeteksi lokasi...</span>
+              </div>
+            @endif
+        </div>
+      </div>
 
-      <hr class="my-4">
+      {{-- Attendance Status Cards --}}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Masuk -->
+        <div class="relative overflow-hidden rounded-xl p-4 border {{ $attendance?->status == 'late' ? 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-800' : 'bg-blue-50 border-blue-100 dark:bg-blue-900/20 dark:border-blue-800' }}">
+            <div class="relative z-10">
+                <p class="text-xs font-medium uppercase tracking-wider {{ $attendance?->status == 'late' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400' }}">Absen Masuk</p>
+                <h4 class="text-2xl font-bold mt-1 {{ $attendance?->status == 'late' ? 'text-red-700 dark:text-red-300' : 'text-blue-700 dark:text-blue-300' }}">
+                    @if ($isAbsence)
+                        {{ __($attendance?->status) ?? '-' }}
+                    @else
+                        {{ $attendance?->time_in ? Carbon::parse($attendance?->time_in)->format('H:i') : '--:--' }}
+                    @endif
+                </h4>
+                @if ($attendance?->status == 'late')
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 mt-2">
+                        Terlambat
+                    </span>
+                @endif
+            </div>
+            <x-heroicon-o-arrow-right-end-on-rectangle class="absolute right-[-10px] bottom-[-10px] w-20 h-20 opacity-10 {{ $attendance?->status == 'late' ? 'text-red-600' : 'text-blue-600' }}" />
+        </div>
 
-      <div class="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-3" wire:ignore>
-        <a href="{{ route('apply-leave') }}">
-          <div
-            class="flex flex-col-reverse items-center justify-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-center font-medium text-white shadow-md shadow-gray-400 transition duration-100 hover:bg-amber-300 dark:shadow-gray-700 md:flex-row md:gap-3">
-            Ajukan Izin
-            <x-heroicon-o-envelope-open class="h-6 w-6 text-white" />
+        <!-- Keluar -->
+        <div class="relative overflow-hidden rounded-xl p-4 border bg-purple-50 border-purple-100 dark:bg-purple-900/20 dark:border-purple-800">
+            <div class="relative z-10">
+                <p class="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400">Absen Keluar</p>
+                <h4 class="text-2xl font-bold mt-1 text-purple-700 dark:text-purple-300">
+                    @if ($isAbsence)
+                        {{ __($attendance?->status) ?? '-' }}
+                    @else
+                        {{ $attendance?->time_out ? Carbon::parse($attendance?->time_out)->format('H:i') : '--:--' }}
+                    @endif
+                </h4>
+            </div>
+            <x-heroicon-o-arrow-left-start-on-rectangle class="absolute right-[-10px] bottom-[-10px] w-20 h-20 opacity-10 text-purple-600" />
+        </div>
+      </div>
+
+      {{-- Map Toggle Button --}}
+      <button
+          class="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+          {{ is_null($attendance?->lat_lng) ? 'disabled' : 'onclick=toggleMap()' }} id="toggleMap">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg group-hover:bg-white dark:group-hover:bg-gray-600 transition-colors">
+                <x-heroicon-o-map class="w-6 h-6 text-gray-600 dark:text-gray-300" />
+            </div>
+            <div class="text-left">
+                <h4 class="font-semibold text-gray-900 dark:text-white">Lokasi Absen</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    @if (is_null($attendance?->lat_lng))
+                    Belum ada data
+                    @else
+                    {{ Str::limit($attendance?->latitude . ', ' . $attendance?->longitude, 30) }}
+                    @endif
+                </p>
+            </div>
           </div>
+          <x-heroicon-s-chevron-down class="w-5 h-5 text-gray-400" />
+      </button>
+      <div class="h-52 w-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hidden" id="map" wire:ignore></div>
+
+      <hr class="border-gray-100 dark:border-gray-700">
+
+      {{-- Quick Actions --}}
+      <div class="grid grid-cols-3 gap-3" wire:ignore>
+        <a href="{{ route('apply-leave') }}" class="group flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all">
+            <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                <x-heroicon-o-envelope-open class="h-6 w-6" />
+            </div>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300 text-center">Izin</span>
         </a>
-        <a href="{{ route('attendance-history') }}">
-          <div
-            class="flex flex-col-reverse items-center justify-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-center font-medium text-white shadow-md shadow-gray-400 hover:bg-blue-300 dark:shadow-gray-700 md:flex-row md:gap-3">
-            Riwayat Absen
-            <x-heroicon-o-clock class="h-6 w-6 text-white" />
-          </div>
+        
+        <a href="{{ route('attendance-history') }}" class="group flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-900/20 border border-transparent hover:border-purple-200 dark:hover:border-purple-800 transition-all">
+            <div class="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                <x-heroicon-o-clock class="h-6 w-6" />
+            </div>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300 text-center">Riwayat</span>
         </a>
-        <a href="{{ route('user.bills') }}">
-          <div
-            class="flex flex-col-reverse items-center justify-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-center font-medium text-white shadow-md shadow-gray-400 hover:bg-green-300 dark:shadow-gray-700 md:flex-row md:gap-3">
-            Tagihan Saya
-            <x-heroicon-o-currency-dollar class="h-6 w-6 text-white" />
-          </div>
-        </a>
-        <a href="{{ route('user.tasks') }}">
-          <div
-            class="flex flex-col-reverse items-center justify-center gap-2 rounded-md bg-blue-500 px-4 py-2 text-center font-medium text-white shadow-md shadow-gray-400 hover:bg-purple-300 dark:shadow-gray-700 md:flex-row md:gap-3">
-            Tugas Saya
-            <x-heroicon-o-document-text class="h-6 w-6 text-white" />
-          </div>
+
+        <a href="{{ route('user.tasks') }}" class="group flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-orange-50 dark:hover:bg-orange-900/20 border border-transparent hover:border-orange-200 dark:hover:border-orange-800 transition-all">
+            <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                <x-heroicon-o-document-text class="h-6 w-6" />
+            </div>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300 text-center">Tugas</span>
         </a>
       </div>
     </div>
@@ -183,6 +214,12 @@
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 21,
         }).addTo(map);
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        };
+
         navigator.geolocation.watchPosition((position) => {
           console.log(position);
           $wire.$set('currentLiveCoords', [position.coords.latitude, position.coords.longitude]);
@@ -193,8 +230,13 @@
           L.marker([position.coords.latitude, position.coords.longitude]).addTo(map);
         }, (err) => {
           console.error(`ERROR(${err.code}): ${err.message}`);
-          alert('{{ __('Please enable your location') }}');
-        });
+          let msg = '{{ __('Please enable your location') }}';
+          if (err.code === err.TIMEOUT) {
+            msg = 'Terlalu lama mendeteksi lokasi. Pastikan GPS aktif dan sinyal bagus.';
+          }
+          alert(msg);
+          document.querySelector('#scanner-error').innerHTML = msg;
+        }, options);
       } else {
         document.querySelector('#scanner-error').innerHTML = "Gagal mendeteksi lokasi";
       }

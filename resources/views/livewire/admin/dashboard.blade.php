@@ -1,94 +1,211 @@
 @php
   $date = Carbon\Carbon::now();
 @endphp
-<div>{{-- Grafik Statistik --}}
+<div>
 @pushOnce('styles')
   <style>
     #attendanceChart {
-      max-height: 300px;
+      max-height: 350px;
     }
   </style>
 @endpushOnce
 
-<div class="mt-6 mb-6 rounded-lg bg-white p-4 shadow dark:bg-gray-800">
-  <h3 class="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">
-    Grafik Statistik Absensi Hari Ini
-  </h3>
-  <canvas id="attendanceChart"></canvas>
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2 border-0" style="border-left: 4px solid #10b981 !important;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Hadir (Hari Ini)</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $presentCount }}</div>
+                        <div class="text-xs text-muted mt-1">Terlambat: {{ $lateCount }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="p-3 bg-success-light rounded-circle" style="background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-user-check fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2 border-0" style="border-left: 4px solid #3b82f6 !important;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Izin / Sakit</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $excusedCount + $sickCount }}</div>
+                        <div class="text-xs text-muted mt-1">Izin: {{ $excusedCount }} | Sakit: {{ $sickCount }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="p-3 bg-primary-light rounded-circle" style="background: rgba(59, 130, 246, 0.1);">
+                            <i class="fas fa-envelope-open-text fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2 border-0" style="border-left: 4px solid #ef4444 !important;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Tanpa Keterangan</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $absentCount }}</div>
+                        <div class="text-xs text-muted mt-1">Belum melakukan absensi</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="p-3 bg-danger-light rounded-circle" style="background: rgba(239, 68, 68, 0.1);">
+                            <i class="fas fa-user-times fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2 border-0" style="border-left: 4px solid #f59e0b !important;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Siswa</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $employeesCount }}</div>
+                        <div class="text-xs text-muted mt-1">Terdaftar di sistem</div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="p-3 bg-warning-light rounded-circle" style="background: rgba(245, 158, 11, 0.1);">
+                            <i class="fas fa-users fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-@pushOnce('scripts')
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    document.addEventListener('livewire:init', () => {
-      let ctx = document.getElementById('attendanceChart').getContext('2d');
+{{-- Countdown Widget for Admin --}}
+@if($shift && $clockInDeadline)
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center mb-3 mb-md-0">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary" style="width: 80px; height: 80px;">
+                            <i class="fas fa-clock fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <h5 class="font-weight-bold mb-2">Jadwal Absensi Hari Ini</h5>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            Shift: <strong>{{ $shift->name }}</strong> ({{ $shift->start_time }} - {{ $shift->end_time }})
+                        </p>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="mr-4">
+                                <small class="text-muted d-block">Buka Absen</small>
+                                <strong class="text-success">{{ $clockInOpenTime->format('H:i') }} WIB</strong>
+                            </div>
+                            <div class="mr-4">
+                                <small class="text-muted d-block">Deadline</small>
+                                <strong class="text-danger">{{ $clockInDeadline->format('H:i') }} WIB</strong>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Jam Keluar</small>
+                                <strong class="text-primary">{{ $clockOutTime->format('H:i') }} WIB</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div id="admin-countdown-display" class="display-4 font-weight-bold text-primary mb-2" style="font-family: 'Courier New', monospace;">--:--:--</div>
+                        <p id="admin-countdown-label" class="text-muted mb-0 font-weight-bold">Sisa Waktu</p>
+                        <div class="progress mt-2" style="height: 6px;">
+                            <div id="admin-countdown-progress" class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Hadir', 'Terlambat', 'Izin', 'Sakit', 'Tidak Hadir'],
-          datasets: [{
-            label: 'Jumlah',
-            data: [
-              {{ $presentCount }},
-              {{ $lateCount }},
-              {{ $excusedCount }},
-              {{ $sickCount }},
-              {{ $absentCount }}
-            ],
-            backgroundColor: [
-              'rgba(34,197,94,0.7)',   // green
-              'rgba(251,191,36,0.7)', // amber
-              'rgba(59,130,246,0.7)', // blue
-              'rgba(147,51,234,0.7)', // purple
-              'rgba(239,68,68,0.7)'   // red
-            ],
-            borderWidth: 1,
-            borderColor: 'rgba(0,0,0,0.1)'
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true }
-          }
+@push('scripts')
+<script>
+    // Admin Countdown Timer
+    const now = new Date().getTime();
+    const clockInOpenTime = new Date('{{ $clockInOpenTime->format('Y-m-d H:i:s') }}').getTime();
+    const clockInDeadline = new Date('{{ $clockInDeadline->format('Y-m-d H:i:s') }}').getTime();
+    const clockOutTime = new Date('{{ $clockOutTime->format('Y-m-d H:i:s') }}').getTime();
+    
+    let targetTime;
+    let labelText;
+    let progressColor;
+    
+    // Determine which countdown to show
+    if (now < clockInOpenTime) {
+        targetTime = clockInOpenTime;
+        labelText = 'Dibuka Dalam';
+        progressColor = 'bg-secondary';
+    } else if (now < clockInDeadline) {
+        targetTime = clockInDeadline;
+        labelText = 'Deadline Dalam';
+        progressColor = 'bg-danger';
+    } else if (now < clockOutTime) {
+        targetTime = clockOutTime;
+        labelText = 'Jam Keluar Dalam';
+        progressColor = 'bg-primary';
+    } else {
+        targetTime = clockInOpenTime + (24 * 60 * 60 * 1000); // Tomorrow
+        labelText = 'Besok Dibuka Dalam';
+        progressColor = 'bg-info';
+    }
+    
+    const startOfDay = new Date('{{ \Carbon\Carbon::today()->format('Y-m-d H:i:s') }}').getTime();
+    const totalDuration = targetTime - startOfDay;
+    
+    function updateAdminCountdown() {
+        const now = new Date().getTime();
+        const distance = targetTime - now;
+        
+        const display = document.getElementById('admin-countdown-display');
+        const label = document.getElementById('admin-countdown-label');
+        const progress = document.getElementById('admin-countdown-progress');
+        
+        if (!display || !label || !progress) return;
+        
+        if (distance < 0) {
+            display.textContent = 'MEMUAT...';
+            setTimeout(() => window.location.reload(), 2000);
+            return;
         }
-      });
-    });
-  </script>
-@endpushOnce
-{{-- Tabel Absensi Harian --}}
-<div class="mt-6 mb-6">
-  @pushOnce('styles')
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  @endpushOnce
-  <div class="flex flex-col justify-between sm:flex-row">
-    <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-      Absensi Hari Ini
-    </h3>
-    <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200">
-      Jumlah Mahasiswa: {{ $employeesCount }}
-    </h3>
-  </div>
-  <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-    <div class="rounded-md bg-green-200 px-8 py-4 text-gray-800 dark:bg-green-900 dark:text-white dark:shadow-gray-700">
-      <span class="text-2xl font-semibold md:text-3xl">Hadir: {{ $presentCount }}</span><br>
-      <span>Terlambat: {{ $lateCount }}</span>
-    </div>
-    <div class="rounded-md bg-blue-400 px-8 py-4 text-gray-800 dark:bg-blue-900 dark:text-white dark:shadow-gray-700">
-      <span class="text-2xl font-semibold md:text-3xl">Izin: {{ $excusedCount }}</span><br>
-      <span>Izin/Cuti</span>
-    </div>
-    <div
-      class="rounded-md bg-purple-300 px-8 py-4 text-gray-800 dark:bg-purple-900 dark:text-white dark:shadow-gray-700">
-      <span class="text-2xl font-semibold md:text-3xl">Sakit: {{ $sickCount }}</span>
-    </div>
-    <div class="rounded-md bg-red-300 px-8 py-4 text-gray-800 dark:bg-red-900 dark:text-white dark:shadow-gray-700">
-      <span class="text-2xl font-semibold md:text-3xl">Tidak Hadir: {{ $absentCount }}</span><br>
-      <span>Tidak/Belum Hadir</span>
-    </div>
-  </div>
+        
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        display.textContent = 
+            String(hours).padStart(2, '0') + ':' + 
+            String(minutes).padStart(2, '0') + ':' + 
+            String(seconds).padStart(2, '0');
+        
+        label.textContent = labelText;
+        
+        const percentage = Math.min(Math.max((distance / totalDuration) * 100, 0), 100);
+        progress.style.width = percentage + '%';
+        progress.className = 'progress-bar ' + progressColor;
+    }
+    
+    updateAdminCountdown();
+    setInterval(updateAdminCountdown, 1000);
+</script>
+@endpush
+@endif
+
 
   <div class="mb-4 overflow-x-scroll rounded">
     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700 ">
@@ -98,7 +215,7 @@
             {{ __('Name') }}
           </th>
           <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-            {{ __('NIM') }}
+            {{ __('NISN') }}
           </th>
           <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
             {{ __('Division') }}
@@ -169,12 +286,12 @@
             }
           @endphp
           <tr wire:key="{{ $employee->id }}" class="group">
-            {{-- Detail mahasiswa --}}
+            {{-- Detail siswa --}}
             <td class="{{ $class }} text-nowrap group-hover:bg-gray-100 dark:group-hover:bg-gray-700">
               {{ $employee->name }}
             </td>
             <td class="{{ $class }} group-hover:bg-gray-100 dark:group-hover:bg-gray-700">
-              {{ $employee->nim }}
+              {{ $employee->nisn }}
             </td>
             <td class="{{ $class }} text-nowrap group-hover:bg-gray-100 dark:group-hover:bg-gray-700">
               {{ $employee->division?->name ?? '-' }}

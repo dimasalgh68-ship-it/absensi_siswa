@@ -41,23 +41,22 @@ class AttendanceFactory extends Factory
     public function present(bool $late = false): static
     {
         return $this->state(function (array $attributes) use ($late) {
-            /** @var Barcode */
-            $barcode = Barcode::inRandomOrder()->first();
+            /** @var \App\Models\OfficeLocation */
+            $location = \App\Models\OfficeLocation::inRandomOrder()->first();
             /** @var Shift */
             $shift = Shift::inRandomOrder()->first();
-            $time_in = Carbon::parse($shift->start_time)->subMinutes(rand(0, max: 15))->toTimeString();
-            $time_out = Carbon::parse($shift->end_time)->addMinutes(rand(0, max: 15))->toTimeString();
+            $time_in = Carbon::parse($shift->start_time)->subMinutes(rand(0, 15))->toTimeString();
+            $time_out = Carbon::parse($shift->end_time)->addMinutes(rand(0, 15))->toTimeString();
             if ($late) {
-                $time_in = Carbon::parse($shift->start_time)->addMinutes(rand(min: 1, max: 15))->toTimeString();
+                $time_in = Carbon::parse($shift->start_time)->addMinutes(rand(1, 15))->toTimeString();
             }
             return [
-                'barcode_id' => $barcode->id,
                 'time_in' => $time_in,
                 'time_out' => $time_out,
                 'status' => $late ? 'late' : 'present',
                 'shift_id' => $shift->id,
-                'latitude' => $barcode->latitude,
-                'longitude' => $barcode->longitude,
+                'latitude' => $location->latitude,
+                'longitude' => $location->longitude,
                 'note' => null,
             ];
         });

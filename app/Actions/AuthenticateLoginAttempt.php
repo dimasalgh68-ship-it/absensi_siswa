@@ -10,14 +10,21 @@ class AuthenticateLoginAttempt
 {
     public function __invoke(Request $request)
     {
-        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
-            $user = User::where('email', $request->email)->first();
+        $login = $request->input('email'); // Fortify uses 'email' field by default
+
+        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $user = User::where('email', $login)->first();
         } else {
-            $user = User::where('phone', $request->email)->first();
+            // Try NISN first, then Phone
+            $user = User::where('nisn', $login)
+                ->orWhere('phone', $login)
+                ->first();
         }
 
         if ($user && Hash::check($request->password, $user->password)) {
             return $user;
         }
+
+        return null;
     }
 }

@@ -2,7 +2,7 @@
   <thead>
     <tr>
       <th>#</th>
-      <th>NIM</th>
+      <th>NISN</th>
       <th>Name</th>
       <th>Email</th>
       <th>Phone</th>
@@ -21,6 +21,27 @@
     </tr>
   </thead>
   <tbody>
+    @if (isset($isTemplate) && $isTemplate)
+      <tr>
+        <td>1</td>
+        <td>1234567890</td>
+        <td>John Doe</td>
+        <td>john@example.com</td>
+        <td>08123456789</td>
+        <td>L</td>
+        <td>1990-01-01</td>
+        <td>Jakarta</td>
+        <td>Jl. Jend. Sudirman</td>
+        <td>Jakarta</td>
+        <td>S1</td>
+        <td>IT</td>
+        <td>Developer</td>
+        <td>{{ now() }}</td>
+        <td>{{ now() }}</td>
+        <td>password123</td>
+        <td>1</td>
+      </tr>
+    @endif
     @foreach ($users as $user)
       <tr>
         <td>{{ $loop->iteration }}</td>

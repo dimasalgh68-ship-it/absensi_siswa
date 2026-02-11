@@ -24,7 +24,9 @@ class AttendancesExport implements FromView
      */
     public function view(): View
     {
-        $attendances = Attendance::filter(
+        $isTemplate = $this->month === 'template_mode';
+        
+        $attendances = $isTemplate ? collect([]) : Attendance::filter(
             month: $this->month,
             year: $this->year,
             division: $this->division,
@@ -32,6 +34,9 @@ class AttendancesExport implements FromView
             education: $this->education
         )->get();
 
-        return view('admin.import-export.export-attendances', ['attendances' => $attendances]);
+        return view('admin.import-export.export-attendances', [
+            'attendances' => $attendances,
+            'isTemplate' => $isTemplate
+        ]);
     }
 }

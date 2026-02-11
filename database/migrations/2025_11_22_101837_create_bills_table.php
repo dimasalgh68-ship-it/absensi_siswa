@@ -28,6 +28,7 @@ return new class extends Migration
             $table->enum('status', ['unpaid', 'paid'])->default('unpaid');
             $table->date('due_date')->nullable();
             $table->timestamp('paid_at')->nullable();
+            $table->string('proof_path')->nullable();
 
             $table->timestamps();
         });

@@ -4,7 +4,7 @@
       <th>#</th>
       <th>Date</th>
       <th>Name</th>
-      <th>NIM</th>
+      <th>NISN</th>
       <th>Time In</th>
       <th>Time Out</th>
       <th>Shift</th>
@@ -21,6 +21,27 @@
     </tr>
   </thead>
   <tbody>
+    @if (isset($isTemplate) && $isTemplate)
+      <tr>
+        <td>1</td>
+        <td>{{ date('Y-m-d') }}</td>
+        <td>John Doe</td>
+        <td>1234567890</td>
+        <td>08:00:00</td>
+        <td>17:00:00</td>
+        <td>Reguler</td>
+        <td>1</td>
+        <td>-6.1754,106.8272</td>
+        <td>Hadir</td>
+        <td>Contoh catatan</td>
+        <td>https://example.com/image.jpg</td>
+        <td>{{ now() }}</td>
+        <td>{{ now() }}</td>
+        <td>1</td>
+        <td>1</td>
+        <td>present</td>
+      </tr>
+    @endif
     @foreach ($attendances as $attendance)
       <tr>
         <td>{{ $loop->iteration }}</td>

@@ -32,14 +32,31 @@ Alpine.store('pageTransition', {
             localStorage.removeItem('pageTransition');
         }
 
-        // Add event listeners to all navigation links
+        // DISABLED: Global click interceptor is causing UI conflicts with sidebar and dropdowns
+        /*
         document.addEventListener('click', (e) => {
             const link = e.target.closest('a[href]');
-            if (link && this.isInternalLink(link.href)) {
+            
+            if (!link) return;
+            
+            const href = link.getAttribute('href');
+            
+            if (!href || 
+                href.startsWith('#') || 
+                href === 'javascript:void(0)' ||
+                link.hasAttribute('data-toggle') || 
+                link.hasAttribute('data-target') ||
+                link.closest('.dropdown-menu') ||
+                link.classList.contains('dropdown-toggle')) {
+                return;
+            }
+
+            if (this.isInternalLink(link.href)) {
                 e.preventDefault();
                 this.handleNavigation(link.href);
             }
-        });
+        }, true);
+        */
     },
     isInternalLink(href) {
         const url = new URL(href, window.location.origin);

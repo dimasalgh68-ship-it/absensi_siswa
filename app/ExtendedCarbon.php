@@ -16,12 +16,7 @@ class ExtendedCarbon extends Carbon
      */
     public function yearWeekString(): string
     {
-        if ($this->week < 10 && !str_contains($this->week, '0')) {
-            $week = "0$this->week";
-        } else {
-            $week = $this->week;
-        }
-        return "$this->year-W$week";
+        return $this->format('o-\WW');
     }
 
     /**

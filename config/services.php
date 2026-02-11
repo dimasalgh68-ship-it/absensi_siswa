@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'face_recognition' => [
+        'endpoint' => env('FACE_RECOGNITION_API_ENDPOINT', 'http://localhost:5000/api'),
+        'api_key' => env('FACE_RECOGNITION_API_KEY', ''),
+        'similarity_threshold' => env('FACE_RECOGNITION_THRESHOLD', 0.70),
+    ],
+
 ];

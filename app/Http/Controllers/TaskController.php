@@ -43,7 +43,7 @@ class TaskController extends Controller
             'description' => $request->description,
             'assigned_to' => $request->assigned_to,
             'due_date' => $request->due_date,
-            'created_by' => auth()->id(),
+            'created_by' => auth()->id,
             'image_path' => $imagePath,
             'link' => $request->link,
             'status' => 'active',

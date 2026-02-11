@@ -37,87 +37,69 @@ class AttendanceController extends Controller
         }
 
         $carbon = new Carbon;
+        $startDate = null;
+        $endDate = null;
+        $dates = [];
 
         if ($request->date) {
+            $startDate = $carbon->parse($request->date)->startOfDay();
+            $endDate = $carbon->parse($request->date)->endOfDay();
             $dates = [$carbon->parse($request->date)->settings(['formatFunction' => 'translatedFormat'])];
         } else if ($request->week) {
-            $start = $carbon->parse($request->week)->settings(['formatFunction' => 'translatedFormat'])->startOfWeek();
-            $end = $carbon->parse($request->week)->settings(['formatFunction' => 'translatedFormat'])->endOfWeek();
-            $dates = $start->range($end)->toArray();
+            $startDate = $carbon->parse($request->week)->startOfWeek();
+            $endDate = $carbon->parse($request->week)->endOfWeek();
+            $dates = $startDate->range($endDate)->toArray();
         } else if ($request->month) {
-            $start = $carbon->parse($request->month)->settings(['formatFunction' => 'translatedFormat'])->startOfMonth();
-            $end = $carbon->parse($request->month)->settings(['formatFunction' => 'translatedFormat'])->endOfMonth();
-            $dates = $start->range($end)->toArray();
+            $startDate = $carbon->parse($request->month)->startOfMonth();
+            $endDate = $carbon->parse($request->month)->endOfMonth();
+            $dates = $startDate->range($endDate)->toArray();
         }
-        $employees = User::where('group', 'user')
+
+        // Eager load attendances for the date range
+        $employees = User::whereIn('group', ['user', 'student'])
             ->when($request->division, fn (Builder $q) => $q->where('division_id', $request->division))
             ->when($request->jobTitle, fn (Builder $q) => $q->where('job_title_id', $request->jobTitle))
+            ->with(['attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')]);
+            }])
             ->get()
-            ->map(function ($user) use ($request) {
+            ->map(function ($user) use ($request, $startDate, $endDate) {
+                // Transform attendances to match expected format
+                $attendances = $user->attendances->map(function ($v) {
+                    $v->setAttribute('coordinates', $v->lat_lng);
+                    $v->setAttribute('lat', $v->latitude);
+                    $v->setAttribute('lng', $v->longitude);
+                    if ($v->attachment) {
+                        $v->setAttribute('attachment', $v->attachment_url);
+                    }
+                    if ($v->shift) {
+                        $v->setAttribute('shift', $v->shift->name);
+                    }
+                    // Add face recognition data
+                    if ($v->face_photo_path) {
+                        $v->setAttribute('face_photo_url', \Storage::url($v->face_photo_path));
+                    }
+                    if ($v->face_photo_out_path) {
+                        $v->setAttribute('face_photo_out_url', \Storage::url($v->face_photo_out_path));
+                    }
+                    return $v->getAttributes();
+                });
+
+                // Filter for specific date if needed (though query handles it)
                 if ($request->date) {
-                    $attendances = new Collection(Cache::remember(
-                        "attendance-$user->id-$request->date",
-                        now()->addDay(),
-                        function () use ($user, $request) {
-                            $date = Carbon::parse($request->date);
-
-                            /** @var Collection<Attendance>  */
-                            $attendances = Attendance::where('user_id', $user->id)
-                                ->where('date', $date->toDateString())
-                                ->get();
-
-                            return $attendances->map(
-                                function (Attendance $v) {
-                                    $v->setAttribute('coordinates', $v->lat_lng);
-                                    $v->setAttribute('lat', $v->latitude);
-                                    $v->setAttribute('lng', $v->longitude);
-                                    if ($v->attachment) {
-                                        $v->setAttribute('attachment', $v->attachment_url);
-                                    }
-                                    if ($v->shift) {
-                                        $v->setAttribute('shift', $v->shift->name);
-                                    }
-                                    return $v->getAttributes();
-                                }
-                            )->toArray();
-                        }
-                    ) ?? []);
-                } else if ($request->week) {
-                    $attendances = new Collection(Cache::remember(
-                        "attendance-$user->id-$request->week",
-                        now()->addDay(),
-                        function () use ($user, $request) {
-                            $start = Carbon::parse($request->week)->startOfWeek();
-                            $end = Carbon::parse($request->week)->endOfWeek();
-
-                            /** @var Collection<Attendance>  */
-                            $attendances = Attendance::where('user_id', $user->id)
-                                ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-                                ->get(['id', 'status', 'date']);
-
-                            return $attendances->map(fn ($v) => $v->getAttributes())->toArray();
-                        }
-                    ) ?? []);
-                } else if ($request->month) {
-                    $my = Carbon::parse($request->month);
-                    $attendances = new Collection(Cache::remember(
-                        "attendance-$user->id-$my->month-$my->year",
-                        now()->addDay(),
-                        function () use ($user, $my) {
-                            /** @var Collection<Attendance>  */
-                            $attendances = Attendance::where('user_id', $user->id)
-                                ->whereMonth('date', $my->month)
-                                ->whereYear('date', $my->year)
-                                ->get(['id', 'status', 'date']);
-
-                            return $attendances->map(fn ($v) => $v->getAttributes())->toArray();
-                        }
-                    ) ?? []);
+                    $user->attendances = $attendances->toArray();
                 } else {
-                    /** @var Collection */
-                    $attendances = Attendance::all();
+                    // For week/month, we might need just specific fields as per original code
+                    // Original code for week/month returned ['id', 'status', 'date']
+                    $user->attendances = $attendances->map(function ($item) {
+                        return [
+                            'id' => $item['id'],
+                            'status' => $item['status'],
+                            'date' => $item['date'],
+                        ];
+                    })->toArray();
                 }
-                $user->attendances = $attendances;
+                
                 return $user;
             });
 
@@ -129,11 +111,11 @@ class AttendanceController extends Controller
             'week' => $request->week,
             'division' => $request->division,
             'jobTitle' => $request->jobTitle,
-            'start' => $request->date ? null : $start,
-            'end' => $request->date ? null : $end
+            'start' => $request->date ? null : $startDate,
+            'end' => $request->date ? null : $endDate
         ])->setPaper($request->month ? 'a3' : 'a4', $request->date ? 'portrait' : 'landscape');
+        
         return $pdf->stream();
-        // return $pdf->download();
     }
 
     /**

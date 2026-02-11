@@ -13,14 +13,14 @@ class UserForm extends Form
     public ?User $user = null;
 
     public $name = '';
-    public $nim = '';
+    public $nisn = '';
     public $email = '';
     public $phone = '';
     public $password = null;
     public $gender = null;
     public $city = '';
     public $address = '';
-    public $group = 'user';
+    public $group = 'student';
     public $birth_date = null;
     public $birth_place = '';
     public $division_id = null;
@@ -30,7 +30,8 @@ class UserForm extends Form
 
     public function rules()
     {
-        $requiredOrNullable = $this->group === 'user' ? 'required' : 'nullable';
+        $isStudentOrUser = in_array($this->group, ['user', 'student']);
+        $requiredOrNullable = $isStudentOrUser ? 'required' : 'nullable';
         return [
             'name' => [
                 'required',
@@ -38,7 +39,7 @@ class UserForm extends Form
                 'max:255',
                 Rule::unique('users')->ignore($this->user)
             ],
-            'nim' => [$requiredOrNullable, 'string', 'max:255'],
+            'nisn' => [$requiredOrNullable, 'string', 'max:255'],
             'email' => [
                 'required',
                 'email',
@@ -64,7 +65,7 @@ class UserForm extends Form
     {
         $this->user = $user;
         $this->name = $user->name;
-        $this->nim = $user->nim;
+        $this->nisn = $user->nisn;
         $this->email = $user->email;
         $this->phone = $user->phone;
         if ($this->isAllowed()) {

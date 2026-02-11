@@ -80,6 +80,13 @@
     </div>
   </div>
 
+  @if (!$isPerDayFilter)
+    <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
+      <strong>Keterangan:</strong> H = Hadir, T = Telat, I = Izin, S = Sakit, A = Alpha | 
+      <span style="color: green;">✓</span> = Terverifikasi Wajah
+    </div>
+  @endif
+
   <table id="table">
     <thead>
       <tr>
@@ -91,7 +98,7 @@
         </th>
         @if ($showUserDetail)
           <th scope="col">
-            {{ __('NIM') }}
+            {{ __('NISN') }}
           </th>
           <th scope="col">
             {{ __('Division') }}
@@ -102,6 +109,15 @@
           @if ($isPerDayFilter)
             <th scope="col">
               {{ __('Shift') }}
+            </th>
+            <th scope="col">
+              Waktu Masuk
+            </th>
+            <th scope="col">
+              Waktu Keluar
+            </th>
+            <th scope="col">
+              Verifikasi
             </th>
           @endif
         @endif
@@ -128,8 +144,8 @@
     <tbody>
       @foreach ($employees as $employee)
         @php
-          $attendances = $employee->attendances;
-          $attendance = $employee->attendances->isEmpty() ? null : $employee->attendances->first();
+          $attendances = collect($employee->attendances);
+          $attendance = $attendances->isEmpty() ? null : $attendances->first();
         @endphp
         <tr style="font-size: 12px">
           <td style="text-align: center; vertical-align: middle; padding: 0px">
@@ -140,7 +156,7 @@
           </td>
           @if ($showUserDetail)
             <td>
-              {{ $employee->nip }}
+              {{ $employee->nisn }}
             </td>
             <td>
               {{ $employee->division?->name ?? '-' }}
@@ -151,6 +167,19 @@
             @if ($isPerDayFilter)
               <td>
                 {{ $attendance['shift'] ?? '-' }}
+              </td>
+              <td>
+                {{ $attendance['time_in'] ?? '-' }}
+              </td>
+              <td>
+                {{ $attendance['time_out'] ?? '-' }}
+              </td>
+              <td style="text-align: center;">
+                @if($attendance && isset($attendance['validation_method']) && $attendance['validation_method'] === 'face')
+                  ✓ Face
+                @else
+                  Manual
+                @endif
               </td>
             @endif
           @endif
@@ -164,9 +193,12 @@
           @foreach ($dates as $date)
             @php
               $isWeekend = $date->isWeekend();
-              $status = ($attendances->firstWhere(fn($v, $k) => $v['date'] === $date->format('Y-m-d')) ?? [
+              $attendanceData = $attendances->firstWhere(fn($v, $k) => $v['date'] === $date->format('Y-m-d'));
+              $status = ($attendanceData ?? [
                   'status' => $isWeekend || !$date->isPast() ? '-' : 'absent',
               ])['status'];
+              $isFaceVerified = $attendanceData && isset($attendanceData['validation_method']) && $attendanceData['validation_method'] === 'face';
+              
               switch ($status) {
                   case 'present':
                       $shortStatus = 'H';
@@ -195,6 +227,9 @@
             @endphp
             <td style="padding: 0px; text-align: center;">
               {{ $isPerDayFilter ? __($status) : $shortStatus }}
+              @if(!$isPerDayFilter && $isFaceVerified)
+                <sup style="color: green;">✓</sup>
+              @endif
             </td>
           @endforeach
 

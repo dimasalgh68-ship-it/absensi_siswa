@@ -92,24 +92,36 @@ class UserAttendanceController extends Controller
     {
         // Check if user can access this task
         $canAccess = $task->assigned_to === 'all_users' ||
-                    $task->assignments()->where('user_id', auth()->id())->exists();
+                    $task->assignments()->where('user_id', auth()->id)->exists();
 
         if (!$canAccess) {
             abort(403, 'Anda tidak memiliki akses ke tugas ini.');
         }
 
         $submission = TaskSubmission::where('task_id', $task->id)
-                                   ->where('user_id', auth()->id())
+                                   ->where('user_id', auth()->id)
                                    ->first();
 
-        return view('user.task-detail', compact('task', 'submission'));
+        // Check if deadline has passed
+        $isPastDeadline = false;
+        if ($task->due_date) {
+            $isPastDeadline = Carbon::parse($task->due_date)->isPast();
+        }
+
+        // Check if submission was late
+        $wasLateSubmission = false;
+        if ($submission && $task->due_date) {
+            $wasLateSubmission = Carbon::parse($submission->submitted_at)->isAfter(Carbon::parse($task->due_date));
+        }
+
+        return view('user.task-detail', compact('task', 'submission', 'isPastDeadline', 'wasLateSubmission'));
     }
 
     public function taskSubmit(Task $task)
     {
         // Check if user can access this task
         $canAccess = $task->assigned_to === 'all_users' ||
-                    $task->assignments()->where('user_id', auth()->id())->exists();
+                    $task->assignments()->where('user_id', auth()->id)->exists();
 
         if (!$canAccess) {
             abort(403, 'Anda tidak memiliki akses ke tugas ini.');
@@ -117,31 +129,46 @@ class UserAttendanceController extends Controller
 
         // Check if already submitted
         $existingSubmission = TaskSubmission::where('task_id', $task->id)
-                                           ->where('user_id', auth()->id())
+                                           ->where('user_id', auth()->id)
                                            ->first();
 
-        if ($existingSubmission) {
-            return redirect()->route('user.tasks.detail', $task->id)
-                           ->with('flash.banner', 'Anda sudah mengirim jawaban untuk tugas ini.')
-                           ->with('flash.bannerStyle', 'warning');
+        // Check if deadline has passed
+        $isPastDeadline = false;
+        if ($task->due_date) {
+            $isPastDeadline = Carbon::parse($task->due_date)->isPast();
         }
 
-        return view('user.task-submit', compact('task'));
+        return view('user.task-submit', compact('task', 'existingSubmission', 'isPastDeadline'));
     }
 
     public function storeTaskSubmission(Request $request, Task $task)
     {
         $request->validate([
-            'answer' => 'required|string|max:5000',
+            'answer' => 'nullable|string|max:5000',
             'file' => 'nullable|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png',
+            'link' => 'nullable|url|max:500',
         ]);
+
+        // Validate that at least one field is provided
+        if (!$request->filled('answer') && !$request->hasFile('file') && !$request->filled('link')) {
+            return redirect()->back()
+                           ->withErrors(['submission' => 'Harap isi minisnal satu: jawaban, file, atau link.'])
+                           ->withInput();
+        }
 
         // Check if user can access this task
         $canAccess = $task->assigned_to === 'all_users' ||
-                    $task->assignments()->where('user_id', auth()->id())->exists();
+                    $task->assignments()->where('user_id', auth()->id)->exists();
 
         if (!$canAccess) {
             abort(403, 'Anda tidak memiliki akses ke tugas ini.');
+        }
+
+        // Block submissions after deadline
+        if ($task->due_date && Carbon::parse($task->due_date)->isPast()) {
+            return redirect()->back()
+                           ->with('flash.banner', 'Waktu pengumpulan telah habis. Anda tidak dapat lagi mengumpulkan atau mengedit tugas ini.')
+                           ->with('flash.bannerStyle', 'danger');
         }
 
         try {
@@ -152,7 +179,7 @@ class UserAttendanceController extends Controller
 
             // Check if already submitted
             $existingSubmission = TaskSubmission::where('task_id', $task->id)
-                                               ->where('user_id', auth()->id())
+                                               ->where('user_id', auth()->id)
                                                ->first();
 
             if ($existingSubmission) {
@@ -163,6 +190,7 @@ class UserAttendanceController extends Controller
                 $existingSubmission->update([
                     'answer' => $request->answer,
                     'file_path' => $filePath ?: $existingSubmission->file_path,
+                    'link' => $request->link,
                     'submitted_at' => now(),
                     'status' => 'pending', // Reset status to pending when resubmitted
                 ]);
@@ -174,9 +202,10 @@ class UserAttendanceController extends Controller
                 // Create new submission
                 TaskSubmission::create([
                     'task_id' => $task->id,
-                    'user_id' => auth()->id(),
+                    'user_id' => auth()->id,
                     'answer' => $request->answer,
                     'file_path' => $filePath,
+                    'link' => $request->link,
                     'submitted_at' => now(),
                 ]);
 
@@ -193,7 +222,7 @@ class UserAttendanceController extends Controller
 
     public function myAnswers()
     {
-        $submissions = TaskSubmission::where('user_id', auth()->id())
+        $submissions = TaskSubmission::where('user_id', auth()->id)
                                    ->with('task')
                                    ->orderBy('submitted_at', 'desc')
                                    ->get();

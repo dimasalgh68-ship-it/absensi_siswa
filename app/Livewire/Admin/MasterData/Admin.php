@@ -87,7 +87,7 @@ class Admin extends Component
 
     public function render()
     {
-        $users = User::where('group', '!=', 'user')->orderBy('group', 'desc')->paginate(20);
+        $users = User::whereNotIn('group', ['user', 'student'])->orderBy('group', 'desc')->paginate(20);
         return view('livewire.admin.master-data.admin', ['users' => $users]);
     }
 }

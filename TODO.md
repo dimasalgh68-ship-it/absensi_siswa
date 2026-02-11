@@ -1,0 +1,2 @@
+- [ ] Hapus bagian Recent News dari home.blade.php
+- [ ] Hapus duplikasi Desktop Status Widget di hero header home.blade.php

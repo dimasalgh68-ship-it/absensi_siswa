@@ -20,11 +20,20 @@ class FakeDataSeeder extends Seeder
         User::factory(50)->create();
 
         // Generate 1 user khusus untuk testing
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'user@example.com',
-            'password' => Hash::make('password'), // biar jelas
-        ]);
+        User::updateOrCreate(
+            ['email' => 'user@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => Hash::make('password'),
+                'raw_password' => 'password',
+                'group' => 'student',
+                'phone' => '081234567899',
+                'gender' => 'male',
+                'address' => 'Jakarta',
+                'city' => 'Jakarta',
+                'nisn' => '1234567890',
+            ]
+        );
 
         // Jalankan AttendanceSeeder
         $this->call(AttendanceSeeder::class);
