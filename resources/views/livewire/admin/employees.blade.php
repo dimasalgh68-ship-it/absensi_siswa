@@ -136,7 +136,29 @@
     </x-slot>
 
     <x-slot name="content">
-      Apakah Anda yakin ingin menghapus <b>{{ $deleteName }}</b>?
+      <div class="space-y-3">
+        <p>Apakah Anda yakin ingin menghapus <b class="text-red-600 dark:text-red-400">{{ $deleteName }}</b>?</p>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div class="text-sm text-yellow-800 dark:text-yellow-300">
+              <p class="font-semibold mb-1">Data yang akan terhapus:</p>
+              <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>Semua data absensi</li>
+                <li>Registrasi wajah</li>
+                <li>Foto profil</li>
+                <li>Data tagihan</li>
+                <li>Riwayat tugas</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          <b>Perhatian:</b> Tindakan ini tidak dapat dibatalkan!
+        </p>
+      </div>
     </x-slot>
 
     <x-slot name="footer">
@@ -144,8 +166,15 @@
         {{ __('Cancel') }}
       </x-secondary-button>
 
-      <x-danger-button class="ml-2" wire:click="delete" wire:loading.attr="disabled">
-        {{ __('Confirm') }}
+      <x-danger-button class="ml-2" wire:click="delete" wire:loading.attr="disabled" wire:target="delete">
+        <span wire:loading.remove wire:target="delete">{{ __('Confirm') }}</span>
+        <span wire:loading wire:target="delete">
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Menghapus...
+        </span>
       </x-danger-button>
     </x-slot>
   </x-confirmation-modal>

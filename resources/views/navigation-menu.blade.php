@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="sticky top-0 z-50 border-b border-gray-100 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
+<nav x-data="{ open: false }" class="fixed top-0 left-0 right-0 z-[100] border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm" style="max-width: 100vw; overflow-x: hidden;">
   <!-- Primary Navigation Menu -->
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="flex h-16 justify-between">

@@ -152,4 +152,29 @@ class User extends Authenticatable
     {
         return $this->hasMany(Attendance::class);
     }
+
+    public function faceRegistration()
+    {
+        return $this->hasOne(FaceRegistration::class);
+    }
+
+    public function faceRegistrations()
+    {
+        return $this->hasMany(FaceRegistration::class);
+    }
+
+    public function bills()
+    {
+        return $this->hasMany(Bill::class);
+    }
+
+    public function taskAssignments()
+    {
+        return $this->hasMany(TaskAssignment::class);
+    }
+
+    public function taskSubmissions()
+    {
+        return $this->hasMany(TaskSubmission::class);
+    }
 }

@@ -119,6 +119,7 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     // Attendance
     Route::get('/attendances', [AttendanceController::class, 'index'])->name('admin.attendances');
     Route::get('/attendances/report', [AttendanceController::class, 'report'])->name('admin.attendances.report');
+    Route::get('/attendances/absent-report', [AttendanceController::class, 'absentReport'])->name('admin.attendances.absent-report');
 
     // Import/Export
     Route::get('/import-export/users', [ImportExportController::class, 'users'])->name('admin.import-export.users');
@@ -150,5 +151,10 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::post('/settings/attendance', [\App\Http\Controllers\Admin\SettingsController::class, 'updateAttendanceSettings'])->name('admin.settings.update-attendance');
     Route::post('/settings/face-recognition', [\App\Http\Controllers\Admin\SettingsController::class, 'updateFaceRecognitionSettings'])->name('admin.settings.update-face-recognition');
     Route::delete('/settings/logo', [\App\Http\Controllers\Admin\SettingsController::class, 'resetLogo'])->name('admin.settings.reset-logo');
+
+    // Admin Profile
+    Route::get('/profile', function () {
+        return view('admin.profile');
+    })->name('admin.profile');
 }); // ← tutup admin middleware group
 }); // ← tutup auth middleware group

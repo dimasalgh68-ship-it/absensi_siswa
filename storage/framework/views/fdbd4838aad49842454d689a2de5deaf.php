@@ -191,57 +191,8 @@
                 </div>
                 
                 
-                <div class="hidden md:block animate-slide-up delay-100">
-                     <?php if($attendanceToday): ?>
-                        <div class="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                </div>
-                                <div>
-                                    <p class="text-white font-bold text-sm">Status Hari Ini</p>
-                                    <div class="flex gap-3 mt-0.5">
-                                        <div class="flex flex-col">
-                                            <span class="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Masuk</span>
-                                            <span class="text-white font-mono text-xs"><?php echo e($attendanceToday->time_in ? \Carbon\Carbon::parse($attendanceToday->time_in)->format('H:i') : '-'); ?></span>
-                                        </div>
-                                        <div class="w-px h-6 bg-white/20"></div>
-                                        <div class="flex flex-col">
-                                            <span class="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Keluar</span>
-                                            <span class="text-white font-mono text-xs"><?php echo e($attendanceToday->time_out ? \Carbon\Carbon::parse($attendanceToday->time_out)->format('H:i') : '-'); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <?php if(!$attendanceToday->time_out): ?>
-                                <a href="<?php echo e(route('face-attendance.index')); ?>" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs shadow-lg transition-all flex items-center gap-2 group">
-                                    <span>Absen Keluar</span>
-                                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7"></path></svg>
-                                </a>
-                            <?php else: ?>
-                                <div class="flex flex-col items-end gap-1">
-                                    <div class="px-4 py-1.5 bg-white/20 text-white rounded-xl font-bold text-[10px] flex items-center gap-2">
-                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                                        <span>SELESAI</span>
-                                    </div>
-                                    <span class="text-[10px] text-blue-200 font-mono">Durasi: <?php echo e($attendanceToday->duration); ?></span>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                     <?php else: ?>
-                        <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-xl border border-white/20">
-                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 animate-pulse">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zM6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-white font-semibold text-sm">Belum Presensi</p>
-                                <p class="text-blue-200 text-xs text-nowrap">Scan wajah untuk absen</p>
-                            </div>
-                            <a href="<?php echo e(route('face-attendance.index')); ?>" class="px-3 py-1.5 bg-white text-blue-600 rounded-lg font-semibold text-xs shadow-lg hover:bg-gray-50 transition">Scan</a>
-                        </div>
-                     <?php endif; ?>
-                </div>
+                
+
 
                
             </div>

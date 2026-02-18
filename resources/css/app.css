@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Smooth Scroll */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improve scroll performance */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent horizontal scroll issues */
+.app-gradient,
+#wrapper,
+#content-wrapper {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
 [x-cloak] {
     display: none;
 }

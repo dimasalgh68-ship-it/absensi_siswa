@@ -67,6 +67,12 @@
       Cetak Laporan
       <x-heroicon-o-printer class="h-5 w-5" />
     </x-secondary-button>
+    <x-danger-button
+      href="{{ route('admin.attendances.absent-report', ['month' => $month, 'week' => $week, 'date' => $date, 'division' => $division, 'jobTitle' => $jobTitle]) }}"
+      class="flex justify-center gap-2 bg-red-600 hover:bg-red-700">
+      Laporan Tidak Hadir
+      <x-heroicon-o-exclamation-triangle class="h-5 w-5" />
+    </x-danger-button>
   </div>
 
   {{-- Bulk Action Bar --}}

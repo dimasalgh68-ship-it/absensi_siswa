@@ -8,19 +8,51 @@
 3. ✅ Update middleware untuk handle Storage::url() dinamis
 4. ✅ Clear semua cache
 
-## 🎯 Cara Menjalankan Ngrok (3 Langkah)
+## 🎯 Cara Menjalankan Ngrok
 
-### 1. Start Laravel Server
+### Opsi 1: Gunakan Script Otomatis (RECOMMENDED)
+```powershell
+.\prepare-ngrok.ps1
+```
+Script ini akan otomatis:
+- Stop `npm run dev`
+- Hapus file `hot`
+- Build production assets
+- Verifikasi semua file
+- Clear cache
+
+Lalu jalankan:
+```bash
+php artisan serve
+ngrok http 8000  # di terminal baru
+```
+
+### Opsi 2: Manual (3 Langkah)
+
+#### 1. Persiapan
+```bash
+# Stop npm run dev jika sedang berjalan (Ctrl+C)
+# Hapus file hot
+Remove-Item public\hot -Force -ErrorAction SilentlyContinue
+
+# Build production
+npm run build
+
+# Clear cache
+php artisan optimize:clear
+```
+
+#### 2. Start Laravel Server
 ```bash
 php artisan serve
 ```
 
-### 2. Start Ngrok (Terminal Baru)
+#### 3. Start Ngrok (Terminal Baru)
 ```bash
 ngrok http 8000
 ```
 
-### 3. Buka di Browser
+#### 4. Buka di Browser
 - Copy URL dari ngrok (contoh: `https://xxxx-xxx-xxx.ngrok-free.app`)
 - Buka di browser
 - Tekan **Ctrl + F5** (hard refresh)
@@ -37,12 +69,31 @@ Sekarang:
 
 ## 🔧 Jika Ada Masalah
 
-### CSS Tidak Muncul
+### CSS Tidak Muncul (PALING SERING)
+
+**Penyebab:** File `public/hot` masih ada atau `npm run dev` masih berjalan
+
+**Solusi:**
 ```bash
+# Stop npm run dev (Ctrl+C atau kill process)
+Stop-Process -Name node -Force
+
+# Hapus file hot
+Remove-Item public\hot -Force
+
+# Build ulang
 npm run build
+
+# Clear cache
 php artisan optimize:clear
+
 # Restart server & ngrok
 # Hard refresh browser (Ctrl+F5)
+```
+
+**Atau gunakan script:**
+```powershell
+.\prepare-ngrok.ps1
 ```
 
 ### Gambar Tidak Muncul
@@ -67,21 +118,41 @@ ngrok http 8000
 
 ## 📋 Checklist Sebelum Ngrok
 
+- [ ] `npm run dev` sudah di-stop (Ctrl+C)
+- [ ] Tidak ada proses node: `Get-Process node`
+- [ ] File `public/hot` tidak ada
 - [ ] `npm run build` sudah dijalankan
 - [ ] File ada di `public/build/assets`
 - [ ] `php artisan storage:link` sudah dijalankan
 - [ ] `public/storage` link ke `storage/app/public`
-- [ ] Cache sudah di-clear
-- [ ] Laravel server running
-- [ ] Ngrok running
-- [ ] Browser hard refresh
+- [ ] Cache sudah di-clear: `php artisan optimize:clear`
+- [ ] Laravel server running: `php artisan serve`
+- [ ] Ngrok running: `ngrok http 8000`
+- [ ] Browser hard refresh: Ctrl+F5
+
+**Atau cukup jalankan:**
+```powershell
+.\prepare-ngrok.ps1
+```
 
 ## 🎓 Penjelasan Teknis
 
 ### Kenapa CSS Tidak Muncul?
-- `npm run dev` menjalankan Vite di `localhost:5173`
-- Port ini tidak bisa diakses dari luar (ngrok)
-- Solusi: `npm run build` untuk production
+
+**Masalah 1: File `public/hot` Ada**
+- Ketika `npm run dev` berjalan, Vite membuat file `public/hot`
+- File ini memberitahu Laravel untuk menggunakan Vite dev server
+- Vite dev server berjalan di `localhost:5173` yang tidak bisa diakses dari ngrok
+- **Solusi:** Hapus file `public/hot` dan gunakan `npm run build`
+
+**Masalah 2: npm run dev Masih Berjalan**
+- Proses node masih berjalan di background
+- Terus membuat file `public/hot`
+- **Solusi:** Stop semua proses node: `Stop-Process -Name node -Force`
+
+**Masalah 3: Cache**
+- Laravel cache konfigurasi lama
+- **Solusi:** `php artisan optimize:clear`
 
 ### Kenapa Gambar Tidak Muncul?
 - Gambar disimpan di `storage/app/public`
@@ -138,7 +209,14 @@ storage/
 ## ⚡ Quick Commands
 
 ```bash
-# Build & prepare
+# Cara TERCEPAT (gunakan script)
+.\prepare-ngrok.ps1
+php artisan serve
+ngrok http 8000  # di terminal baru
+
+# Atau manual
+Stop-Process -Name node -Force
+Remove-Item public\hot -Force
 npm run build && php artisan storage:link && php artisan optimize:clear
 
 # Start server
@@ -151,10 +229,26 @@ ngrok http 8000
 ## 💡 Tips
 
 1. **Development Lokal**: Gunakan `npm run dev`
-2. **Testing Ngrok**: Gunakan `npm run build`
-3. **Selalu hard refresh** browser setelah perubahan (Ctrl+F5)
-4. **Cek F12 Console** untuk error
-5. **Cek F12 Network** untuk status request
+2. **Testing Ngrok**: Gunakan `npm run build` (JANGAN `npm run dev`)
+3. **File `public/hot`**: Harus dihapus sebelum ngrok
+4. **Selalu hard refresh** browser setelah perubahan (Ctrl+F5)
+5. **Cek F12 Console** untuk error
+6. **Cek F12 Network** untuk status request
+7. **Gunakan script `prepare-ngrok.ps1`** untuk otomatis
+
+## ⚠️ PENTING - Jangan Lupa!
+
+❌ **JANGAN:**
+- Jalankan `npm run dev` bersamaan dengan ngrok
+- Lupa hapus file `public/hot`
+- Lupa stop proses node sebelum build
+
+✅ **LAKUKAN:**
+- Stop `npm run dev` sebelum ngrok
+- Hapus `public/hot` sebelum ngrok
+- Gunakan `npm run build` untuk ngrok
+- Hard refresh browser (Ctrl+F5)
+- Gunakan script `prepare-ngrok.ps1`
 
 ---
 
