@@ -1,8 +1,8 @@
-# Aplikasi Web Absensi Siswa dengan Face Recognition
+# E-ABSENSI - Sistem Absensi dengan Face Recognition & GPS
 
-![Aplikasi Web Absensi Siswa QR Code GPS](./screenshots/hero.png)
+![E-ABSENSI](./screenshots/hero.png)
 
-Aplikasi web absensi Siswa menggunakan Face Recognition, QR Code, dan GPS dengan sistem Role-Based Access Control (RBAC) untuk Guru dan Siswa.
+Aplikasi web absensi modern menggunakan Face Recognition, GPS Location Tracking, dan Progressive Web App (PWA) dengan sistem Role-Based Access Control (RBAC).
 
 ## ✨ Fitur Utama
 
@@ -11,168 +11,227 @@ Aplikasi web absensi Siswa menggunakan Face Recognition, QR Code, dan GPS dengan
 - Verifikasi wajah real-time di browser
 - Absensi masuk/keluar dengan face recognition
 - Skor kemiripan wajah untuk validasi
-- **Anti-Spoofing Detection** - Mencegah penggunaan foto palsu (foto dari layar/cetakan)
+- **Anti-Spoofing Detection** - Mencegah penggunaan foto palsu dengan 10 layer validasi GPS
 - **Liveness Detection** - Deteksi kedipan mata dan gerakan kepala real-time
 
-### 👥 Role-Based Access Control (RBAC)
-- **Guru (Teacher)**: Kelola siswa, monitor kehadiran, export laporan
-- **Siswa (Student)**: Daftar wajah, absensi, lihat riwayat pribadi
-- **Admin**: Akses penuh ke sistem
-- **Superadmin**: Kontrol penuh termasuk kelola admin
+### � Progressive Web App (PWA)
+- Install sebagai aplikasi native di smartphone
+- Offline support dengan service worker
+- Push notifications
+- Auto-update content
+- Responsive design untuk semua device
 
-### 📍 Location-Based Attendance
-- Validasi lokasi menggunakan GPS
-- Multiple office locations support
-- Radius-based attendance validation
+### 📍 Advanced Location Tracking
+- **10-Layer GPS Anti-Spoofing** - Validasi GPS dengan multiple checks
+- Multiple office locations support dengan Google Maps
+- Radius-based attendance validation (10m - 5000m)
+- GPS metadata logging (accuracy, altitude, speed, heading)
+- Mock location detection
+- Rate limiting untuk mencegah spam
+
+### 👥 Role-Based Access Control (RBAC)
+- **Admin**: Kelola semua data, settings, dan users
+- **Teacher**: Monitor kehadiran, kelola siswa, export laporan
+- **Student**: Daftar wajah, absensi, lihat riwayat pribadi
+- Middleware protection untuk setiap role
 
 ### 📊 Reporting & Analytics
 - Riwayat absensi dengan detail face recognition
 - Export data ke Excel/PDF
 - Statistik kehadiran real-time
+- Dashboard analytics
+- Absent report & calendar view
 
-## Teknologi yang Digunakan
+## 🛠 Teknologi yang Digunakan
 
-* [Laravel 11](https://laravel.com/)
-* [Laravel Jetstream](https://jetstream.laravel.com/)
+### Backend
+* [Laravel 11](https://laravel.com/) - PHP Framework
+* [Laravel Jetstream](https://jetstream.laravel.com/) - Authentication & Teams
+* [Livewire 3](https://livewire.laravel.com/) - Dynamic UI Components
+* MySQL/MariaDB - Database
+
+### Frontend
+* [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+* [Alpine.js](https://alpinejs.dev/) - Lightweight JavaScript
 * [face-api.js](https://github.com/justadudewhohacks/face-api.js) - Face Recognition
-* [Endroid QR Code](https://github.com/endroid/qr-code)
-* [Leaflet.js](https://leafletjs.com/)
-* [OpenStreetMap](https://www.openstreetmap.org/)
-* MySQL/MariaDB
+* [Google Maps API](https://developers.google.com/maps) - Location Services
+
+### PWA & Tools
+* Service Worker - Offline support
+* Web Manifest - App installation
+* [Maatwebsite Excel](https://laravel-excel.com/) - Excel import/export
+* [DomPDF](https://github.com/barryvdh/laravel-dompdf) - PDF generation
 
 ## 🚀 Quick Start
 
-### Login Credentials
+### Prasyarat
 
-**Guru (Teacher):**
-```
-Email: guru1@example.com
-Password: guru123
+* PHP 8.2 atau lebih tinggi
+* [Composer](https://getcomposer.org)
+* [Node.js & NPM](https://nodejs.org) atau [Bun](https://bun.sh/)
+* MySQL/MariaDB
+* Google Maps API Key (untuk location picker)
+
+### Instalasi
+
+1. **Clone repository**
+```bash
+git clone https://github.com/dimasalgh68-ship-it/absensi_siswa.git
+cd absensi_siswa
 ```
 
-**Siswa (Student):**
+2. **Install dependencies**
+```bash
+composer install
+npm install
 ```
-Email: ahmad.fauzi@student.com
-Password: student123
+
+3. **Setup environment**
+```bash
+cp .env.example .env
+php artisan key:generate
 ```
+
+4. **Konfigurasi database** di file `.env`
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=absensi_db
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+5. **Konfigurasi Google Maps API** di file `.env`
+```env
+GOOGLE_MAPS_API_KEY=your_api_key_here
+```
+
+6. **Migrasi database & seeder**
+```bash
+php artisan migrate
+php artisan db:seed DatabaseSeeder
+# Atau untuk data dummy:
+# php artisan db:seed FakeDataSeeder
+```
+
+7. **Build assets**
+```bash
+npm run build
+```
+
+8. **Jalankan aplikasi**
+```bash
+php artisan serve
+```
+
+Akses aplikasi di `http://localhost:8000`
+
+### � Login Credentials
+
+Setelah menjalankan seeder, gunakan kredensial berikut:
 
 **Admin:**
 ```
 Email: admin@example.com
-Password: admin
+Password: admin123
 ```
 
-📖 **Lihat [QUICK_START_RBAC.md](QUICK_START_RBAC.md) untuk panduan lengkap**
+**Teacher:**
+```
+Email: teacher@example.com
+Password: teacher123
+```
 
-## Instalasi
+**Student:**
+```
+Email: student@example.com
+Password: student123
+```
 
-### Prasyarat
+## 📱 Install sebagai PWA
 
-* [Composer](https://getcomposer.org)
-* [NPM & Node.js](https://nodejs.org) atau [Bun](https://bun.com/)
-* PHP 8.3 atau lebih tinggi
-* MySQL/MariaDB
+1. Buka aplikasi di browser (Chrome/Edge/Safari)
+2. Klik tombol "Install App" di navigation bar
+3. Atau gunakan menu browser: "Install App" / "Add to Home Screen"
+4. Aplikasi akan terinstall seperti aplikasi native
+
+## 🔐 Keamanan & Anti-Spoofing
+
+### 10-Layer GPS Anti-Spoofing
+1. ✅ GPS accuracy validation (< 50m)
+2. ✅ Altitude reasonability check
+3. ✅ Speed validation
+4. ✅ Timestamp freshness check
+5. ✅ Mock location detection
+6. ✅ Coordinate format validation
+7. ✅ Heading/bearing validation
+8. ✅ Rate limiting (max 1 request/10s)
+9. ✅ GPS metadata logging
+10. ✅ Database race condition prevention
+
+### Face Recognition Security
+- Liveness detection (blink & head movement)
+- Minimum similarity threshold (70%)
+- Face descriptor storage encryption
+- Anti-spoofing untuk foto palsu
+
+## 📸 Screenshots
+
+### Dashboard & Home
+| Dashboard Admin | Home Page |
+| --- | --- |
+| ![Dashboard](./screenshots/dashboard-light.jpeg) | ![Home](./screenshots/hero.png) |
+
+### Face Recognition
+| Face Scan | Face Registration |
+| --- | --- |
+| ![Face Scan](./screenshots/presensi-scan.png) | ![Registration](./screenshots/presensi-scan-mobile.png) |
+
+### Attendance Management
+| Attendance History | Daily Report |
+| --- | --- |
+| ![History](./screenshots/presensi-user.jpeg) | ![Daily](./screenshots/absensi-hari.png) |
+
+### Data Management
+| Student Data | Export/Import |
+| --- | --- |
+| ![Students](./screenshots/karyawan.jpeg) | ![Export](./screenshots/export-user.jpeg) |
+
+## 🚀 Deployment
+
+Lihat [DEPLOYMENT-README.md](DEPLOYMENT-README.md) untuk panduan deployment ke production.
+
+### Deployment Checklist
+- [ ] Set `APP_ENV=production` di `.env`
+- [ ] Set `APP_DEBUG=false` di `.env`
+- [ ] Generate production key: `php artisan key:generate`
+- [ ] Optimize: `php artisan optimize`
+- [ ] Cache config: `php artisan config:cache`
+- [ ] Cache routes: `php artisan route:cache`
+- [ ] Build assets: `npm run build`
+- [ ] Setup SSL certificate (HTTPS required for PWA & GPS)
+- [ ] Configure Google Maps API key dengan domain restrictions
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](LICENSE).
+
+## 👨‍💻 Author
+
+**Dimas Al Ghofiqi Binsig**
+- GitHub: [@dimasalgh68-ship-it](https://github.com/dimasalgh68-ship-it)
+
+## ❤️ Support
+
+Jika project ini membantu Anda, berikan ⭐ di repository ini!
+
+[![Donate Saweria](https://img.shields.io/badge/Donate-Saweria-red?style=for-the-badge)](https://saweria.co/Brodimss)
 
 ---
 
-1. Clone/download repository ini
-2. Jalankan perintah `composer run-script post-root-package-install` untuk membuat file `.env`
-3. Jalankan perintah `composer install` untuk menginstalasi dependency
-4. Jalankan perintah `npm install` untuk menginstalasi dependency Javascript
-5. Jalankan perintah `php artisan key:generate --ansi --force` untuk membuat key aplikasi
-6. Jalankan perintah `php artisan migrate` untuk membuat tabel database
-7. Jalankan perintah `npm run build` untuk membuat file css dan javascript yang diperlukan
-8. Jalankan perintah `php artisan serve` untuk menjalankan aplikasi
-
-### Seeder
-
-Pilih salah satu opsi berikut:
-
-* Jalankan perintah `php artisan db:seed DatabaseSeeder` untuk menyiapkan data awal (termasuk Guru & Siswa)
-* Jalankan perintah `php artisan db:seed FakeDataSeeder` untuk menyiapkan data awal beserta data dummy (absensi & karyawan)
-
-## 📚 Dokumentasi
-
-- **[RBAC_DOCUMENTATION.md](RBAC_DOCUMENTATION.md)** - Dokumentasi lengkap Role-Based Access Control
-- **[QUICK_START_RBAC.md](QUICK_START_RBAC.md)** - Panduan cepat untuk testing RBAC
-- **[ANTI_SPOOFING.md](ANTI_SPOOFING.md)** - Dokumentasi Anti-Spoofing Detection
-- **[LIVENESS_DETECTION.md](LIVENESS_DETECTION.md)** - Panduan implementasi Liveness Detection (Blink & Head Movement)
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Panduan deployment
-
-## Fitur & Pratinjau
-
-### 🎓 Siswa (Student)
-
-#### Face Registration
-- Daftar wajah dengan deteksi real-time
-- Validasi kualitas foto wajah
-- Update foto wajah kapan saja
-
-#### Face Attendance
-- Absen masuk/keluar dengan face recognition
-- Validasi lokasi GPS
-- Feedback langsung dengan skor kemiripan
-
-#### Attendance History
-- Lihat riwayat kehadiran pribadi
-- Detail face recognition per absensi
-- Statistik kehadiran bulanan
-
-### 👨‍🏫 Guru (Teacher)
-
-#### Student Management
-- Kelola data siswa (CRUD)
-- Monitor face registration siswa
-- Atur shift dan jadwal
-
-#### Attendance Monitoring
-- Monitor kehadiran real-time
-- Filter berdasarkan tanggal, status, siswa
-- Lihat detail face recognition
-
-#### Reports & Export
-- Rekap kehadiran per periode
-- Export ke Excel/PDF
-- Statistik kehadiran kelas
-
-### User/Siswa
-
-| Scan Page                                | Scan Page (Mobile)                                     |
-| ---------------------------------------- | ------------------------------------------------------ |
-| ![Scan](./screenshots/presensi-scan.png) | ![Scan mobile](./screenshots/presensi-scan-mobile.png) |
-
-| Pengajuan Absensi                                       | Riwayat Absensi siswa                             |
-| ------------------------------------------------------- | ---------------------------------------------------- |
-| ![Pengajuan Absensi](./screenshots/pengajuan-izin.jpeg) | ![Riwayat Absensi](./screenshots/presensi-user.jpeg) |
-
-### Admin & Superadmin
-
-| Dashboard Admin                                  | Dashboard Admin Dark                                 |
-| ------------------------------------------------ | ---------------------------------------------------- |
-| ![Dashboard](./screenshots/dashboard-light.jpeg) | ![Dashboard Dark](./screenshots/dashboard-dark.jpeg) |
-
-| Barcode                                | Create/Edit Barcode                                            |
-| -------------------------------------- | -------------------------------------------------------------- |
-| ![Barcode](./screenshots/barcode.jpeg) | ![Create Edit Barcode](./screenshots/create-edit-barcode.jpeg) |
-
-| Absensi siswa                                    |                                                         |                                                       |
-| --------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------- |
-| Absensi per hari                                    | Absensi per minggu                                      | Absensi per bulan                                     |
-| ![Absensi per hari](./screenshots/absensi-hari.png) | ![Absensi per minggu](./screenshots/absensi-minggu.png) | ![Absensi per bulan](./screenshots/absensi-bulan.png) |
-
-| Data Siswa                                 | Create/Edit Data Siswa                                            |
-| --------------------------------------------- | -------------------------------------------------------------------- |
-| ![Data Siswa](./screenshots/siswa.jpeg) | ![Create Edit Data Siswa](./screenshots/create-edit-siswa.png) |
-
-| Export/Import from/to XLSX                                       |                                                                                   |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Export/Import Data Siswa & User                               | Export/Import Data Siswa & User + Preview Data                                 |
-| ![Export/Import Data Siswa](./screenshots/export-user.jpeg)   | ![Export/Import Data Siswa + Preview](./screenshots/export-user-preview.jpeg)  |
-| Export/Import Data Absensi & User                                | Export/Import Data Absensi & User + Preview Data                                  |
-| ![Export/Import Data Absensi](./screenshots/export-absensi.jpeg) | ![Export/Import Data Absensi + Preview](./screenshots/export-absensi-preview.png) |
-
-## Donasi ❤
-
-[![Donate saweria](https://img.shields.io/badge/Donate-Saweria-red?style=for-the-badge&link=https%3A%2F%2Fsaweria.co%2Fxiboxann)](https://saweria.co/Brodimss)
-
-Atau, beri star...⭐⭐⭐⭐
+**Built with ❤️ using Laravel & Modern Web Technologies**
