@@ -170,21 +170,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::get('/attendances', [AttendanceController::class, 'index'])->name('admin.attendances');
     Route::get('/attendances/report', [AttendanceController::class, 'report'])->name('admin.attendances.report');
     Route::get('/attendances/absent-report', [AttendanceController::class, 'absentReport'])->name('admin.attendances.absent-report');
-<<<<<<< HEAD
-=======
-
-    // Import/Export
-    Route::get('/import-export/users', [ImportExportController::class, 'users'])->name('admin.import-export.users');
-    Route::get('/import-export/attendances', [ImportExportController::class, 'attendances'])->name('admin.import-export.attendances');
-    Route::get('/import-export/users/template', [ImportExportController::class, 'userTemplate'])->name('admin.import-export.users.template');
-    Route::get('/import-export/attendances/template', [ImportExportController::class, 'attendanceTemplate'])->name('admin.import-export.attendances.template');
-    Route::post('/users/import', [ImportExportController::class, 'importUsers'])->name('admin.users.import');
-    Route::post('/attendances/import', [ImportExportController::class, 'importAttendances'])->name('admin.attendances.import');
-    Route::get('/users/export', [ImportExportController::class, 'exportUsers'])->name('admin.users.export');
-    Route::get('/attendances/export', [ImportExportController::class, 'exportAttendances'])->name('admin.attendances.export');
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
-
-    // Bills and Tasks routes removed
 
     // Academic Calendar (Both Admin & Teacher)
     Route::get('/academic-calendar', [App\Http\Controllers\AcademicCalendarController::class, 'index'])
@@ -192,7 +177,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::post('/academic-calendar/sync-holidays', [App\Http\Controllers\AcademicCalendarController::class, 'syncHolidays'])
         ->name('admin.academic-calendar.sync-holidays');
 
-<<<<<<< HEAD
     // Admin Profile
     Route::get('/profile', [\App\Http\Controllers\AdminProfileController::class, 'show'])->name('admin.profile');
 
@@ -243,20 +227,6 @@ Route::prefix('admin')->middleware('admin')->group(function () {
     Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('admin.tasks.update');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('admin.tasks.destroy');
     Route::post('/tasks/{task}/submissions/{submission}/status', [TaskController::class, 'updateSubmissionStatus'])->name('admin.tasks.submissions.status');
-=======
-    // Settings
-    Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('admin.settings');
-    Route::post('/settings/logo', [\App\Http\Controllers\Admin\SettingsController::class, 'updateLogo'])->name('admin.settings.update-logo');
-    Route::post('/settings/app-name', [\App\Http\Controllers\Admin\SettingsController::class, 'updateAppName'])->name('admin.settings.update-app-name');
-    Route::post('/settings/attendance', [\App\Http\Controllers\Admin\SettingsController::class, 'updateAttendanceSettings'])->name('admin.settings.update-attendance');
-    Route::post('/settings/face-recognition', [\App\Http\Controllers\Admin\SettingsController::class, 'updateFaceRecognitionSettings'])->name('admin.settings.update-face-recognition');
-    Route::delete('/settings/logo', [\App\Http\Controllers\Admin\SettingsController::class, 'resetLogo'])->name('admin.settings.reset-logo');
-
-    // Admin Profile
-    Route::get('/profile', function () {
-        return view('admin.profile');
-    })->name('admin.profile');
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
 }); // ← tutup admin middleware group
 
 // TEACHER AREA
