@@ -3,5 +3,9 @@
     <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
   </x-slot>
 
-  @livewire('admin.dashboard-component')
+  @if(Auth::user()->isTeacher)
+    @livewire('teacher.teacher-dashboard-component')
+  @else
+    @livewire('admin.dashboard-component')
+  @endif
 </x-admin-layout>

@@ -55,6 +55,59 @@
       });
     });
   </script>
+  
+  <!-- CSRF Token Auto-Refresh -->
+  <script>
+    // Refresh CSRF token every 30 minutes to prevent page expiration
+    function refreshCSRFToken() {
+      fetch('/refresh-csrf', {
+        method: 'GET',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.token) {
+          // Update meta tag
+          document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+          
+          // Update all CSRF input fields
+          document.querySelectorAll('input[name="_token"]').forEach(input => {
+            input.value = data.token;
+          });
+          
+          console.log('✅ CSRF token refreshed');
+        }
+      })
+      .catch(error => {
+        console.warn('⚠️ Failed to refresh CSRF token:', error);
+      });
+    }
+    
+    // Refresh token every 30 minutes (1800000 ms)
+    setInterval(refreshCSRFToken, 1800000);
+    
+    // Also refresh on page visibility change (when user returns to tab)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        refreshCSRFToken();
+      }
+    });
+    
+    // Refresh before form submission
+    document.addEventListener('submit', (e) => {
+      const form = e.target;
+      if (form.method.toLowerCase() === 'post') {
+        const tokenInput = form.querySelector('input[name="_token"]');
+        if (tokenInput) {
+          const metaToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+          tokenInput.value = metaToken;
+        }
+      }
+    });
+  </script>
 </body>
 
 </html>

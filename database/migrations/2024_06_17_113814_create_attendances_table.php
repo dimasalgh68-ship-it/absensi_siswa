@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignUlid('user_id')->constrained('users');
+            $table->foreignUlid('user_id')->constrained('users')->onDelete('cascade');
             // barcode_id dihapus, diganti dengan face recognition
             $table->date('date')->nullable();
             $table->time('time_in')->nullable(); // absensi masuk

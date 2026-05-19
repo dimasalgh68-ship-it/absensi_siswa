@@ -71,6 +71,18 @@ class DashboardComponent extends Component
         $sickCount = $attendances->where(fn ($attendance) => $attendance->status === 'sick')->count();
         $absentCount = max(0, $employeesCount - ($presentCount + $lateCount + $excusedCount + $sickCount));
 
+        // Admin Dashboard Administrative Highlights
+        $teachersCount = \App\Models\User::where('group', 'teacher')->count();
+        $faceRegCount = \App\Models\FaceRegistration::count();
+        $officeLocCount = \App\Models\OfficeLocation::count();
+        
+        $todayDayName = \Carbon\Carbon::now()->translatedFormat('l'); // e.g. "Senin"
+        $todaySchedules = \App\Models\Schedule::with(['subject', 'teacher'])
+            ->where('day_of_week', $todayDayName)
+            ->get();
+        
+        $recentTasks = \App\Models\Task::latest()->take(3)->get();
+
         // Calculate countdown for first shift
         $shift = \App\Models\Shift::first();
         $clockInDeadline = null;
@@ -99,6 +111,12 @@ class DashboardComponent extends Component
             'clockInDeadline' => $clockInDeadline,
             'clockOutTime' => $clockOutTime,
             'shift' => $shift,
+            'teachersCount' => $teachersCount,
+            'faceRegCount' => $faceRegCount,
+            'officeLocCount' => $officeLocCount,
+            'todaySchedules' => $todaySchedules,
+            'recentTasks' => $recentTasks,
+            'todayDayName' => $todayDayName,
         ]);
     }
 }

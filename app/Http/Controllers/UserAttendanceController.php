@@ -42,7 +42,9 @@ class UserAttendanceController extends Controller
             }
 
             $fromDate = Carbon::parse($request->from);
-            $fromDate->range($toDate = Carbon::parse($request->to ?? $fromDate))
+            // BUG FIX: Ensure $toDate is set properly
+            $toDate = $request->filled('to') ? Carbon::parse($request->to) : $fromDate;
+            $fromDate->range($toDate)
                 ->forEach(function (Carbon $date) use ($request, $newAttachment) {
                     $existing = Attendance::where('user_id', Auth::user()->id)
                         ->where('date', $date->format('Y-m-d'))
@@ -174,7 +176,24 @@ class UserAttendanceController extends Controller
         try {
             $filePath = null;
             if ($request->hasFile('file')) {
-                $filePath = $request->file('file')->store('task-submissions', 'public');
+                // CRITICAL BUG FIX #3: Use Storage facade with proper validation
+                // This prevents path traversal attacks
+                $file = $request->file('file');
+                
+                // Validate file is actually an uploaded file
+                if (!$file->isValid()) {
+                    throw new \Exception('File upload tidak valid.');
+                }
+                
+                // Store file safely using Storage facade
+                // This automatically sanitizes the filename and prevents directory traversal
+                $filePath = $file->store('task-submissions', 'public');
+                
+                // Verify the stored path is within the expected directory
+                if (strpos($filePath, '..') !== false || strpos($filePath, '//') !== false) {
+                    Storage::disk('public')->delete($filePath);
+                    throw new \Exception('Path traversal terdeteksi. File tidak disimpan.');
+                }
             }
 
             // Check if already submitted

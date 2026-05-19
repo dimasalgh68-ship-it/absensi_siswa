@@ -25,6 +25,14 @@ class FaceRegistration extends Model
     ];
 
     /**
+     * BUG FIX: Add scope for active registrations
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
      * Get the user that owns the face registration.
      */
     public function user(): BelongsTo

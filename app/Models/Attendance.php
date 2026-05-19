@@ -47,15 +47,12 @@ class Attendance extends Model
     }
 
     // Accessor for schedule_id (alias for shift_id)
-    public function getScheduleIdAttribute()
+    protected function scheduleId(): Attribute
     {
-        return $this->shift_id;
-    }
-
-    // Mutator for schedule_id (alias for shift_id)
-    public function setScheduleIdAttribute($value)
-    {
-        $this->attributes['shift_id'] = $value;
+        return Attribute::make(
+            get: fn () => $this->shift_id,
+            set: fn ($value) => ['shift_id' => $value]
+        );
     }
 
     public function user()
@@ -70,27 +67,31 @@ class Attendance extends Model
         return $this->belongsTo(Shift::class);
     }
 
-    function getLatLngAttribute(): array|null
+    protected function latLng(): Attribute
     {
-        if (is_null($this->latitude) || is_null($this->longitude)) {
-            return null;
-        }
-        return [
-            'lat' => $this->latitude,
-            'lng' => $this->longitude
-        ];
+        return Attribute::get(function (): ?array {
+            if (is_null($this->latitude) || is_null($this->longitude)) {
+                return null;
+            }
+            return [
+                'lat' => $this->latitude,
+                'lng' => $this->longitude
+            ];
+        });
     }
 
-    public function getDurationAttribute()
+    protected function duration(): Attribute
     {
-        if (!$this->time_in || !$this->time_out) {
-            return null;
-        }
+        return Attribute::get(function (): ?string {
+            if (!$this->time_in || !$this->time_out) {
+                return null;
+            }
 
-        $in = Carbon::parse($this->time_in);
-        $out = Carbon::parse($this->time_out);
+            $in = Carbon::parse($this->time_in);
+            $out = Carbon::parse($this->time_out);
 
-        return $in->diff($out)->format('%H:%I:%S');
+            return $in->diff($out)->format('%H:%I:%S');
+        });
     }
 
     public static function filter(
@@ -151,9 +152,10 @@ class Attendance extends Model
     {
         if (is_null($user)) return false;
         $date = new ExtendedCarbon($date);
-        $monthYear = "$date->month-$date->year";
-        $week = $date->yearWeekString();
-        $ymd = $date->format('Y-m-d');
+        // BUG FIX: Use proper cache key generation with hashing
+        $monthYear = md5("$date->month-$date->year");
+        $week = md5($date->yearWeekString());
+        $ymd = md5($date->format('Y-m-d'));
 
         try {
             // Precise daily key

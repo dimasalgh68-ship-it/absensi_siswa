@@ -3,9 +3,17 @@
     <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200 md:mb-0">
       Data Siswa
     </h3>
-    <x-button wire:click="showCreating">
-      <x-heroicon-o-plus class="mr-2 h-4 w-4" /> Tambah Siswa
-    </x-button>
+    <div class="flex gap-2">
+      @if(count($selectedRows) > 0)
+        <x-danger-button wire:click="confirmBulkDeletion" class="flex items-center gap-2">
+          <x-heroicon-o-trash class="h-4 w-4" />
+          Hapus ({{ count($selectedRows) }})
+        </x-danger-button>
+      @endif
+      <x-button wire:click="showCreating">
+        <x-heroicon-o-plus class="mr-2 h-4 w-4" /> Tambah Siswa
+      </x-button>
+    </div>
   </div>
   <div class="mb-1 text-sm dark:text-white">Filter:</div>
   <div class="mb-4 grid grid-cols-3 flex-wrap items-center gap-5 md:gap-8 lg:flex">
@@ -54,6 +62,14 @@
     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
       <thead class="bg-gray-50 dark:bg-gray-900">
         <tr>
+          <th scope="col" class="relative px-4 py-3 text-center">
+            <input 
+              type="checkbox" 
+              wire:click="toggleSelectAll($event.target.checked)"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+              {{ count($selectedRows) > 0 && count($selectedRows) === count($users) ? 'checked' : '' }}
+            />
+          </th>
           <th scope="col"
             class="relative px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300">
             No.
@@ -88,6 +104,14 @@
             $wireClick = "wire:click=show('$user->id')";
           @endphp
           <tr wire:key="{{ $user->id }}" class="group">
+            <td class="px-4 py-4 text-center">
+              <input 
+                type="checkbox" 
+                wire:model.live="selectedRows" 
+                value="{{ $user->id }}"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+              />
+            </td>
             <td class="{{ $class }} p-2 text-center text-sm font-medium text-gray-900 dark:text-white"
               {{ $wireClick }}>
               {{ $loop->iteration }}
@@ -727,4 +751,53 @@
         </div>
     </x-slot>
   </x-dialog-modal>
+
+  <!-- Bulk Delete Confirmation Modal -->
+  <x-confirmation-modal wire:model="confirmingBulkDeletion">
+    <x-slot name="title">
+      Konfirmasi Hapus Multiple Siswa
+    </x-slot>
+
+    <x-slot name="content">
+      <div class="space-y-4">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-red-800 dark:text-red-200 mb-2">
+                Anda akan menghapus {{ count($selectedRows) }} siswa sekaligus!
+              </h4>
+              <p class="text-sm text-red-700 dark:text-red-300">
+                Semua data terkait siswa yang dipilih akan dihapus secara permanen, termasuk:
+              </p>
+              <ul class="mt-2 ml-4 text-sm text-red-700 dark:text-red-300 list-disc space-y-1">
+                <li>Data pribadi siswa</li>
+                <li>Riwayat absensi</li>
+                <li>Registrasi wajah (face recognition)</li>
+                <li>Data terkait lainnya</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          <b>Perhatian:</b> Tindakan ini tidak dapat dibatalkan!
+        </p>
+      </div>
+    </x-slot>
+
+    <x-slot name="footer">
+      <x-secondary-button wire:click="$set('confirmingBulkDeletion', false)" wire:loading.attr="disabled">
+        Batal
+      </x-secondary-button>
+
+      <x-danger-button class="ml-2" wire:click="bulkDelete" wire:loading.attr="disabled">
+        Ya, Hapus Semua ({{ count($selectedRows) }})
+      </x-danger-button>
+    </x-slot>
+  </x-confirmation-modal>
 </div>

@@ -1,4 +1,4 @@
-<x-admin-layout>
+<x-dynamic-layout>
   <x-slot name="header">
     <h1 class="h3 mb-0 text-gray-800">
       {{ __('Detail Absensi') }}
@@ -84,4 +84,4 @@
               {{ __('Kembali') }}
             </x-secondary-button>
           </div>
-        </x-admin-layout>
+        </x-dynamic-layout>

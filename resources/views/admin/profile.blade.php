@@ -1,4 +1,4 @@
-<x-admin-layout>
+<x-dynamic-layout>
     <x-slot name="title">Profil Admin</x-slot>
 
     <div class="container-fluid">
@@ -188,4 +188,4 @@
         }
     </style>
     @endpush
-</x-admin-layout>
+</x-dynamic-layout>

@@ -1,4 +1,4 @@
-<x-admin-layout>
+<x-dynamic-layout>
   <x-slot name="header">
     <h1 class="h3 mb-0 text-gray-800">{{ __('Employee') }}</h1>
   </x-slot>
@@ -8,4 +8,4 @@
       @livewire('admin.employee-component')
     </div>
   </div>
-</x-admin-layout>
+</x-dynamic-layout>

@@ -10,7 +10,22 @@ class TaskSubmission extends Model
 
     protected $casts = [
         'status' => 'string',
+        'submitted_at' => 'datetime',
     ];
+
+    // BUG FIX: Add validation rules
+    public static function rules()
+    {
+        return [
+            'task_id' => 'required|exists:tasks,id',
+            'user_id' => 'required|exists:users,id',
+            'answer' => 'nullable|string|max:5000',
+            'status' => 'required|in:pending,approved,rejected',
+            'file_path' => 'nullable|string|max:255',
+            'link' => 'nullable|url|max:500',
+            'submitted_at' => 'required|date',
+        ];
+    }
 
     public function task()
     {

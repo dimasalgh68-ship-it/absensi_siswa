@@ -25,6 +25,10 @@ class SettingsController extends Controller
         
         // Face recognition settings
         $faceSimilarityThreshold = Setting::get('face_similarity_threshold', 70);
+        
+        // GPS Anti-spoofing settings
+        $gpsAntiSpoofingEnabled = Setting::get('gps_anti_spoofing_enabled', true);
+        $gpsAntiSpoofingThreshold = Setting::get('gps_anti_spoofing_threshold', 50);
 
         return view('admin.settings', compact(
             'logo', 
@@ -33,7 +37,9 @@ class SettingsController extends Controller
             'clockOutEarlyMinutes',
             'clockInEarlyMinutes',
             'clockInLateMinutes',
-            'faceSimilarityThreshold'
+            'faceSimilarityThreshold',
+            'gpsAntiSpoofingEnabled',
+            'gpsAntiSpoofingThreshold'
         ));
     }
 
@@ -143,6 +149,27 @@ class SettingsController extends Controller
             return back()->with('success', 'Pengaturan face recognition berhasil diperbarui! Persentase kemiripan minimum sekarang ' . $request->face_similarity_threshold . '%');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal memperbarui pengaturan face recognition: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update GPS anti-spoofing settings.
+     */
+    public function updateGPSAntiSpoofingSettings(Request $request)
+    {
+        $request->validate([
+            'gps_anti_spoofing_enabled' => 'required|boolean',
+            'gps_anti_spoofing_threshold' => 'required|integer|min:20|max:100',
+        ]);
+
+        try {
+            Setting::set('gps_anti_spoofing_enabled', $request->gps_anti_spoofing_enabled);
+            Setting::set('gps_anti_spoofing_threshold', $request->gps_anti_spoofing_threshold);
+
+            $status = $request->gps_anti_spoofing_enabled ? 'diaktifkan' : 'dinonaktifkan';
+            return back()->with('success', "Pengaturan GPS Anti-Spoofing berhasil diperbarui! Fitur {$status} dengan threshold {$request->gps_anti_spoofing_threshold}");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memperbarui pengaturan GPS Anti-Spoofing: ' . $e->getMessage());
         }
     }
 }

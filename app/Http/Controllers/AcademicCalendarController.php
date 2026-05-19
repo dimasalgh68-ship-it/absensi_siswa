@@ -40,9 +40,9 @@ class AcademicCalendarController extends Controller
             $currentDay->addDay();
         }
 
-        // Check if user is admin
-        $isAdmin = auth()->user()->isAdmin ?? false;
-        $view = $isAdmin ? 'admin.academic-calendar' : 'academic-calendar.index';
+        // Check if user is admin or teacher
+        $isAdminOrTeacher = (auth()->user()->isAdmin ?? false) || (auth()->user()->isTeacher ?? false);
+        $view = $isAdminOrTeacher ? 'admin.academic-calendar' : 'academic-calendar.index';
 
         return view($view, compact(
             'calendarDays',

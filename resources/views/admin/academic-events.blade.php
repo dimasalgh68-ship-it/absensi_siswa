@@ -1,10 +1,9 @@
 <x-admin-layout>
     <x-slot name="header">
         <h1 class="h3 mb-0 text-gray-800">
-            {{ __('Kelola Event Akademik') }}
+            {{ __('Academic Events') }}
         </h1>
     </x-slot>
 
-    
-            @livewire('admin.academic-event-component')
-        </x-admin-layout>
+    @livewire('admin.academic-event-component')
+</x-admin-layout>

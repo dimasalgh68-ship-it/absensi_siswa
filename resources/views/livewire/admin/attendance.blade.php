@@ -431,7 +431,6 @@
 
   <x-attendance-detail-modal :current-attendance="$currentAttendance" />
   @stack('attendance-detail-scripts')
-</div>
 
   {{-- Edit Attendance Modal --}}
   <x-dialog-modal wire:model="showEditModal">
@@ -595,3 +594,4 @@
       </x-button>
     </x-slot>
   </x-dialog-modal>
+</div>

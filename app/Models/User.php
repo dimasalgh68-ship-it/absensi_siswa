@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -83,34 +84,34 @@ class User extends Authenticatable
 
     public static $groups = ['user', 'admin', 'superadmin', 'teacher', 'student'];
 
-    final public function getIsUserAttribute(): bool
+    protected function isUser(): Attribute
     {
-        return $this->group === 'user';
+        return Attribute::get(fn () => $this->group === 'user');
     }
 
-    final public function getIsAdminAttribute(): bool
+    protected function isAdmin(): Attribute
     {
-        return $this->group === 'admin' || $this->isSuperadmin;
+        return Attribute::get(fn () => $this->group === 'admin' || $this->group === 'superadmin');
     }
 
-    final public function getIsSuperadminAttribute(): bool
+    protected function isSuperadmin(): Attribute
     {
-        return $this->group === 'superadmin';
+        return Attribute::get(fn () => $this->group === 'superadmin');
     }
 
-    final public function getIsTeacherAttribute(): bool
+    protected function isTeacher(): Attribute
     {
-        return $this->group === 'teacher';
+        return Attribute::get(fn () => $this->group === 'teacher');
     }
 
-    final public function getIsStudentAttribute(): bool
+    protected function isStudent(): Attribute
     {
-        return $this->group === 'student';
+        return Attribute::get(fn () => $this->group === 'student');
     }
 
-    final public function getIsNotAdminAttribute(): bool
+    protected function isNotAdmin(): Attribute
     {
-        return !$this->isAdmin;
+        return Attribute::get(fn () => $this->group !== 'admin' && $this->group !== 'superadmin');
     }
 
     final public function canManageStudents(): bool
@@ -176,5 +177,15 @@ class User extends Authenticatable
     public function taskSubmissions()
     {
         return $this->hasMany(TaskSubmission::class);
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class);
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class);
     }
 }

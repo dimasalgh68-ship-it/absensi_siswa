@@ -100,7 +100,7 @@
                     @click="open = !open">
                 <div class="text-right mr-3 d-none d-lg-inline">
                     <span class="d-block text-slate-800 font-weight-bold small line-height-1">{{ Auth::user()->name }}</span>
-                    <span class="text-slate-400 extra-small font-weight-600">Administrator</span>
+                    <span class="text-slate-400 extra-small font-weight-600">{{ Auth::user()->isTeacher ? 'Tenaga Pendidik' : 'Administrator' }}</span>
                 </div>
                 <div class="profile-avatar shadow-sm">
                     @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
@@ -145,15 +145,21 @@
                     <div class="overflow-hidden text-left flex-grow-1">
                         <h6 class="p-0 text-slate-800 font-weight-bold mb-1 d-block text-truncate" style="font-size: 0.9rem;">{{ Auth::user()->name }}</h6>
                         <p class="mb-0 text-slate-500 extra-small tracking-wide text-truncate" style="font-size: 0.7rem;">{{ Auth::user()->email }}</p>
-                        <span class="badge badge-primary mt-1 px-2 py-1" style="font-size: 0.65rem; background: rgba(79, 70, 229, 0.1); color: var(--primary-color); border: 1px solid rgba(79, 70, 229, 0.2);">
-                            <i class="fas fa-shield-alt mr-1"></i>Administrator
-                        </span>
+                        @if(Auth::user()->isTeacher)
+                            <span class="badge mt-1 px-2 py-1" style="font-size: 0.65rem; background: rgba(5, 150, 105, 0.1); color: var(--primary-color); border: 1px solid rgba(5, 150, 105, 0.2);">
+                                <i class="fas fa-chalkboard-teacher mr-1"></i>Guru
+                            </span>
+                        @else
+                            <span class="badge badge-primary mt-1 px-2 py-1" style="font-size: 0.65rem; background: rgba(79, 70, 229, 0.1); color: var(--primary-color); border: 1px solid rgba(79, 70, 229, 0.2);">
+                                <i class="fas fa-shield-alt mr-1"></i>Administrator
+                            </span>
+                        @endif
                     </div>
                 </div>
                 
                 <!-- Menu Items -->
                 <div class="dropdown-items">
-                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.profile') }}">
+                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route(Auth::user()->isTeacher ? 'teacher.profile' : 'admin.profile') }}">
                         <div class="item-icon-container mr-3 bg-blue-50 text-blue-600 rounded-lg">
                             <i class="fas fa-user-circle fa-sm"></i>
                         </div>
@@ -163,6 +169,7 @@
                         </div>
                     </a>
                     
+                    @if(Auth::user()->isAdmin)
                     <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.settings') }}">
                         <div class="item-icon-container mr-3 bg-indigo-50 text-indigo-600 rounded-lg">
                             <i class="fas fa-sliders-h fa-sm"></i>
@@ -172,6 +179,7 @@
                             <span class="text-slate-400 extra-small">Konfigurasi sistem</span>
                         </div>
                     </a>
+                    @endif
                     
                     <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.dashboard') }}">
                         <div class="item-icon-container mr-3 bg-emerald-50 text-emerald-600 rounded-lg">

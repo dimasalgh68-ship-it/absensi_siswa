@@ -1,2 +1,32 @@
+# Robots.txt untuk Aplikasi Absensi Karyawan
+# 
+# Aplikasi ini adalah sistem internal untuk absensi
+# Sebaiknya tidak diindex oleh search engine
+
 User-agent: *
-Disallow:
+# Block semua halaman admin
+Disallow: /admin/
+# Block halaman login/register
+Disallow: /login
+Disallow: /register
+Disallow: /password/
+# Block API endpoints
+Disallow: /api/
+# Block storage
+Disallow: /storage/
+# Block vendor
+Disallow: /vendor/
+# Allow public assets
+Allow: /build/
+Allow: /assets/
+Allow: /pwa-icons/
+Allow: /manifest.json
+Allow: /sw.js
+Allow: /offline.html
+
+# Jika ingin block semua (recommended untuk sistem internal):
+# User-agent: *
+# Disallow: /
+
+# Sitemap (jika ada)
+# Sitemap: https://yourdomain.com/sitemap.xml

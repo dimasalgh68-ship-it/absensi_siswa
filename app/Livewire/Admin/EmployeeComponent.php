@@ -28,6 +28,11 @@ class EmployeeComponent extends Component
     public ?string $education = null;
     public ?string $search = null;
 
+    # bulk selection
+    public array $selectedRows = [];
+    public bool $selectAll = false;
+    public bool $confirmingBulkDeletion = false;
+
     public function show($id)
     {
         $this->form->setUser(User::find($id));
@@ -109,6 +114,60 @@ class EmployeeComponent extends Component
                 'user_id' => $this->selectedId,
                 'exception' => $e,
             ]);
+            $this->banner('Terjadi kesalahan saat menghapus siswa. Silakan coba lagi.', 'danger');
+        }
+    }
+
+    public function toggleSelectAll($checked)
+    {
+        if ($checked) {
+            $this->selectedRows = $this->getFilteredUserIds();
+        } else {
+            $this->selectedRows = [];
+        }
+    }
+
+    protected function getFilteredUserIds()
+    {
+        return User::where('group', 'student')
+            ->when($this->search, function (Builder $q) {
+                return $q->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('nisn', 'like', '%' . $this->search . '%')
+                    ->orWhere('email', 'like', '%' . $this->search . '%')
+                    ->orWhere('phone', 'like', '%' . $this->search . '%');
+            })
+            ->when($this->division, fn (Builder $q) => $q->where('division_id', $this->division))
+            ->when($this->jobTitle, fn (Builder $q) => $q->where('job_title_id', $this->jobTitle))
+            ->when($this->education, fn (Builder $q) => $q->where('education_id', $this->education))
+            ->pluck('id')
+            ->toArray();
+    }
+
+    public function confirmBulkDeletion()
+    {
+        if (empty($this->selectedRows)) {
+            $this->banner('Pilih minimal 1 siswa untuk dihapus.', 'danger');
+            return;
+        }
+        $this->confirmingBulkDeletion = true;
+    }
+
+    public function bulkDelete()
+    {
+        try {
+            $count = count($this->selectedRows);
+            
+            User::whereIn('id', $this->selectedRows)->delete();
+            
+            $this->selectedRows = [];
+            $this->selectAll = false;
+            $this->confirmingBulkDeletion = false;
+            
+            $this->banner("{$count} siswa berhasil dihapus.");
+            
+        } catch (\Exception $e) {
+            $this->confirmingBulkDeletion = false;
+            \Log::error('Bulk delete error: ' . $e->getMessage());
             $this->banner('Terjadi kesalahan saat menghapus siswa. Silakan coba lagi.', 'danger');
         }
     }

@@ -1,0 +1,766 @@
+<div>
+  <div class="mb-4 flex-col items-center gap-5 sm:flex-row md:flex md:justify-between lg:mr-4">
+    <h3 class="mb-4 text-lg font-semibold leading-tight text-gray-800 dark:text-gray-200 md:mb-0">
+      Data Guru
+    </h3>
+    <div class="flex gap-2">
+      @if(count($selectedRows) > 0)
+        <x-danger-button wire:click="confirmBulkDeletion" class="flex items-center gap-2">
+          <x-heroicon-o-trash class="h-4 w-4" />
+          Hapus ({{ count($selectedRows) }})
+        </x-danger-button>
+      @endif
+      <x-button wire:click="showCreating">
+        <x-heroicon-o-plus class="mr-2 h-4 w-4" /> Tambah Guru
+      </x-button>
+    </div>
+  </div>
+  <div class="mb-1 text-sm dark:text-white">Pencarian:</div>
+  <div class="mb-4 grid grid-cols-1 flex-wrap items-center gap-5 md:gap-8 lg:flex">
+    <div class="flex items-center gap-2 w-full lg:w-auto">
+      <x-input type="text" class="w-full lg:w-72" name="search" id="search" wire:model="search"
+        placeholder="Cari nama atau NIP..." />
+      <div class="flex gap-2">
+        <x-button class="flex justify-center sm:w-32" type="button" wire:click="$refresh" wire:loading.attr="disabled">
+          {{ __('Search') }}
+        </x-button>
+        @if ($search)
+          <x-secondary-button class="flex justify-center sm:w-32" type="button" wire:click="$set('search', '')"
+            wire:loading.attr="disabled">
+            {{ __('Reset') }}
+          </x-secondary-button>
+        @endif
+      </div>
+    </div>
+  </div>
+  <div class="overflow-x-scroll">
+    <table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-900">
+        <tr>
+          <th scope="col" class="relative px-4 py-3 text-center">
+            <input 
+              type="checkbox" 
+              wire:click="toggleSelectAll($event.target.checked)"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+              {{ count($selectedRows) > 0 && count($selectedRows) === count($users) ? 'checked' : '' }}
+            />
+          </th>
+          <th scope="col"
+            class="relative px-2 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300">
+            No.
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+            {{ __('Name') }}
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+            NIP / NIK
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+            {{ __('Email') }}
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+            {{ __('Phone Number') }}
+          </th>
+          <th scope="col"
+            class="hidden px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 sm:table-cell">
+            {{ __('City') }}
+          </th>
+          <th scope="col" class="relative px-6 py-3">
+            <span class="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+        @php
+          $class = 'cursor-pointer group-hover:bg-gray-100 dark:group-hover:bg-gray-700';
+        @endphp
+        @foreach ($users as $user)
+          @php
+            $wireClick = "wire:click=show('$user->id')";
+          @endphp
+          <tr wire:key="{{ $user->id }}" class="group">
+            <td class="px-4 py-4 text-center">
+              <input 
+                type="checkbox" 
+                wire:model.live="selectedRows" 
+                value="{{ $user->id }}"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+              />
+            </td>
+            <td class="{{ $class }} p-2 text-center text-sm font-medium text-gray-900 dark:text-white"
+              {{ $wireClick }}>
+              {{ $loop->iteration }}
+            </td>
+            <td class="{{ $class }} px-6 py-4 text-sm font-medium text-gray-900 dark:text-white"
+              {{ $wireClick }}>
+              {{ $user->name }}
+            </td>
+            <td class="{{ $class }} px-6 py-4 text-sm font-medium text-gray-900 dark:text-white"
+              {{ $wireClick }}>
+              {{ $user->nisn }}
+            </td>
+            <td class="{{ $class }} px-6 py-4 text-sm font-medium text-gray-900 dark:text-white"
+              {{ $wireClick }}>
+              {{ $user->email }}
+            </td>
+            <td class="{{ $class }} px-6 py-4 text-sm font-medium text-gray-900 dark:text-white"
+              {{ $wireClick }}>
+              {{ $user->phone }}
+            </td>
+            <td
+              class="{{ $class }} hidden px-6 py-4 text-sm font-medium text-gray-900 dark:text-white sm:table-cell"
+              {{ $wireClick }}>
+              {{ $user->city }}
+            </td>
+            <td class="relative flex justify-end gap-2 px-6 py-4">
+              <x-button wire:click="edit('{{ $user->id }}')">
+                Edit
+              </x-button>
+              <x-danger-button wire:click="confirmDeletion('{{ $user->id }}', '{{ $user->name }}')">
+                Delete
+              </x-danger-button>
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-3">
+    {{ $users->links() }}
+  </div>
+
+  <x-confirmation-modal wire:model="confirmingDeletion">
+    <x-slot name="title">
+      Hapus Guru
+    </x-slot>
+
+    <x-slot name="content">
+      <div class="space-y-3">
+        <p>Apakah Anda yakin ingin menghapus <b class="text-red-600 dark:text-red-400">{{ $deleteName }}</b>?</p>
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div class="text-sm text-yellow-800 dark:text-yellow-300">
+              <p class="font-semibold mb-1">Data yang akan terhapus:</p>
+              <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>Semua data absensi</li>
+                <li>Registrasi wajah</li>
+                <li>Foto profil</li>
+                <li>Data tagihan</li>
+                <li>Riwayat tugas</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          <b>Perhatian:</b> Tindakan ini tidak dapat dibatalkan!
+        </p>
+      </div>
+    </x-slot>
+
+    <x-slot name="footer">
+      <x-secondary-button wire:click="$toggle('confirmingDeletion')" wire:loading.attr="disabled">
+        {{ __('Cancel') }}
+      </x-secondary-button>
+
+      <x-danger-button class="ml-2" wire:click="delete" wire:loading.attr="disabled" wire:target="delete">
+        <span wire:loading.remove wire:target="delete">{{ __('Confirm') }}</span>
+        <span wire:loading wire:target="delete">
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Menghapus...
+        </span>
+      </x-danger-button>
+    </x-slot>
+  </x-confirmation-modal>
+
+  <x-dialog-modal wire:model="creating">
+    <x-slot name="title">
+      Guru Baru
+    </x-slot>
+
+    <form wire:submit="create">
+      <x-slot name="content">
+        @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+          <div x-data="{ photoName: null, photoPreview: null }" class="col-span-6 sm:col-span-4">
+            <!-- Profile Photo File Input -->
+            <input type="file" id="photo" class="hidden" wire:model.live="form.photo" x-ref="photo"
+              x-on:change="
+                                    photoName = $refs.photo.files[0].name;
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                        photoPreview = e.target.result;
+                                    };
+                                    reader.readAsDataURL($refs.photo.files[0]);
+                            " />
+
+            <x-label for="photo" value="{{ __('Photo') }}" />
+
+            <!-- Current Profile Photo -->
+            <div class="mt-2 h-20 w-20 rounded-full outline outline-gray-400" x-show="! photoPreview">
+            </div>
+
+            <!-- New Profile Photo Preview -->
+            <div class="mt-2" x-show="photoPreview" style="display: none;">
+              <span class="block h-20 w-20 rounded-full bg-cover bg-center bg-no-repeat"
+                x-bind:style="'background-image: url(\'' + photoPreview + '\');'">
+              </span>
+            </div>
+
+            <x-secondary-button class="me-2 mt-2" type="button" x-on:click.prevent="$refs.photo.click()">
+              {{ __('Select A New Photo') }}
+            </x-secondary-button>
+
+            @if ($form->user?->profile_photo_path)
+              <x-secondary-button type="button" class="mt-2" wire:click="deleteProfilePhoto">
+                {{ __('Remove Photo') }}
+              </x-secondary-button>
+            @endif
+
+            @error('form.photo')
+              <x-input-error for="form.photo" message="{{ $message }}" class="mt-2" />
+            @enderror
+          </div>
+        @endif
+        <div class="mt-4">
+          <x-label for="name">Nama Guru</x-label>
+          <x-input id="name" class="mt-1 block w-full" type="text" wire:model="form.name" />
+          @error('form.name')
+            <x-input-error for="form.name" class="mt-2" message="{{ $message }}" />
+          @enderror
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="email">{{ __('Email') }}</x-label>
+            <x-input id="email" class="mt-1 block w-full" type="email" wire:model="form.email"
+              placeholder="example@example.com" required />
+            @error('form.email')
+              <x-input-error for="form.email" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="nisn">NIP / NIK</x-label>
+            <x-input id="nisn" class="mt-1 block w-full" type="text" wire:model="form.nisn"
+              placeholder="199001012020011001" required />
+            @error('form.nisn')
+              <x-input-error for="form.nisn" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="password">{{ __('Password') }}</x-label>
+            <x-input id="password" class="mt-1 block w-full" type="password" wire:model="form.password"
+              placeholder="New Password" />
+            <p class="text-sm dark:text-gray-400">Default password: <b>password</b></p>
+            @error('form.password')
+              <x-input-error for="form.password" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="gender">{{ __('Gender') }}</x-label>
+            <div class="my-3 flex flex-row gap-5">
+              <div class="flex items-center">
+                <input type="radio" id="gender-male" wire:model="form.gender" value="male" />
+                <x-label for="gender-male" class="ml-2">{{ __('Male') }}</x-label>
+              </div>
+              <div class="flex items-center">
+                <input type="radio" id="gender-female" wire:model="form.gender" value="female" />
+                <x-label for="gender-female" class="ml-2">{{ __('Female') }}</x-label>
+              </div>
+            </div>
+            @error('form.gender')
+              <x-input-error for="form.gender" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="phone">{{ __('Phone') }}</x-label>
+            <x-input id="phone" class="mt-1 block w-full" type="number" wire:model="form.phone"
+              placeholder="+628123456789" />
+            @error('form.phone')
+              <x-input-error for="form.phone" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="birth_date">{{ __('Birth Date') }}</x-label>
+            <x-input id="birth_date" class="mt-1 block w-full" type="date" wire:model="form.birth_date" />
+            @error('form.birth_date')
+              <x-input-error for="form.birth_date" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="birth_place">{{ __('Birth Place') }}</x-label>
+            <x-input id="birth_place" class="mt-1 block w-full" type="text" wire:model="form.birth_place"
+              placeholder="Jakarta" />
+            @error('form.birth_place')
+              <x-input-error for="form.birth_place" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="city">{{ __('City') }}</x-label>
+            <x-input id="city" class="mt-1 block w-full" type="text" wire:model="form.city"
+              placeholder="Domisili" />
+            @error('form.city')
+              <x-input-error for="form.city" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="address">{{ __('Address') }}</x-label>
+            <x-input id="address" class="mt-1 block w-full" type="text" wire:model="form.address"
+              placeholder="Jl. Jend. Sudirman" />
+            @error('form.address')
+              <x-input-error for="form.address" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4">
+          <x-label for="form.education_id" value="Wali Kelas (Opsional)" />
+          <x-select id="form.education_id" class="mt-1 block w-full" wire:model="form.education_id">
+            <option value="">-- Bukan Wali Kelas --</option>
+            @foreach (App\Models\Education::all() as $education)
+              <option value="{{ $education->id }}" {{ $education->id == $form->education_id ? 'selected' : '' }}>
+                {{ $education->name }}
+              </option>
+            @endforeach
+          </x-select>
+          @error('form.education_id')
+            <x-input-error for="form.education_id" class="mt-2" message="{{ $message }}" />
+          @enderror
+        </div>
+
+        <!-- Subjects Selection -->
+        <div class="mt-4">
+          <x-label value="Mata Pelajaran yang Diajarkan" />
+          <div class="mt-2 grid grid-cols-2 gap-3 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 dark:border-gray-700">
+            @foreach ($availableSubjects as $subject)
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  wire:model.number="selectedSubjects" 
+                  value="{{ $subject['id'] }}"
+                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                >
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $subject['name'] }}</span>
+              </label>
+            @endforeach
+          </div>
+          <p class="mt-1 text-xs text-red-500 dark:text-red-400">* Wajib pilih minimal 1 mata pelajaran</p>
+          @if (empty($selectedSubjects))
+            <x-input-error for="selectedSubjects" class="mt-2" message="Mata pelajaran wajib dipilih" />
+          @endif
+        </div>
+      </x-slot>
+
+      <x-slot name="footer">
+        <x-secondary-button wire:click="$toggle('creating')" wire:loading.attr="disabled">
+          {{ __('Cancel') }}
+        </x-secondary-button>
+
+        <x-button class="ml-2" wire:click="create" wire:loading.attr="disabled" wire:target="form.photo">
+          {{ __('Confirm') }}
+        </x-button>
+      </x-slot>
+    </form>
+  </x-dialog-modal>
+
+  <x-dialog-modal wire:model="editing">
+    <x-slot name="title">
+      Edit Guru
+    </x-slot>
+
+    <form wire:submit.prevent="update" id="user-edit">
+      <x-slot name="content">
+        @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+          <div x-data="{ photoName: null, photoPreview: null }" class="col-span-6 sm:col-span-4">
+            <!-- Profile Photo File Input -->
+            <input type="file" id="photo" class="hidden" wire:model.live="form.photo" x-ref="photo"
+              x-on:change="
+                                    photoName = $refs.photo.files[0].name;
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                        photoPreview = e.target.result;
+                                    };
+                                    reader.readAsDataURL($refs.photo.files[0]);
+                            " />
+
+            <x-label for="photo" value="{{ __('Photo') }}" />
+
+            <!-- Current Profile Photo -->
+            <div class="mt-2" x-show="! photoPreview">
+              <img src="{{ $form->user?->profile_photo_url }}" alt="{{ $form->user?->name }}"
+                class="h-20 w-20 rounded-full object-cover">
+            </div>
+
+            <!-- New Profile Photo Preview -->
+            <div class="mt-2" x-show="photoPreview" style="display: none;">
+              <span class="block h-20 w-20 rounded-full bg-cover bg-center bg-no-repeat"
+                x-bind:style="'background-image: url(\'' + photoPreview + '\');'">
+              </span>
+            </div>
+
+            <x-secondary-button class="me-2 mt-2" type="button" x-on:click.prevent="$refs.photo.click()">
+              {{ __('Select A New Photo') }}
+            </x-secondary-button>
+
+            @if ($form->user?->profile_photo_path)
+              <x-secondary-button type="button" class="mt-2" wire:click="deleteProfilePhoto">
+                {{ __('Remove Photo') }}
+              </x-secondary-button>
+            @endif
+
+            @error('form.photo')
+              <x-input-error for="form.photo" message="{{ $message }}" class="mt-2" />
+            @enderror
+          </div>
+        @endif
+        <div class="mt-4">
+          <x-label for="name">Nama Guru</x-label>
+          <x-input id="name" class="mt-1 block w-full" type="text" wire:model="form.name" />
+          @error('form.name')
+            <x-input-error for="form.name" class="mt-2" message="{{ $message }}" />
+          @enderror
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="email">{{ __('Email') }}</x-label>
+            <x-input id="email" class="mt-1 block w-full" type="email" wire:model="form.email"
+              placeholder="example@example.com" required />
+            @error('form.email')
+              <x-input-error for="form.email" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="nisn">NIP / NIK</x-label>
+            <x-input id="nisn" class="mt-1 block w-full" type="text" wire:model="form.nisn"
+              placeholder="199001012020011001" required />
+            @error('form.nisn')
+              <x-input-error for="form.nisn" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="password">{{ __('Password') }}</x-label>
+            <x-input id="password" class="mt-1 block w-full" type="password" wire:model="form.password"
+              placeholder="New Password" />
+            @error('form.password')
+              <x-input-error for="form.password" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="gender">{{ __('Gender') }}</x-label>
+            <div class="my-3 flex flex-row gap-5">
+              <div class="flex items-center">
+                <input type="radio" id="gender-male" wire:model="form.gender" value="male" />
+                <x-label for="gender-male" class="ml-2">{{ __('Male') }}</x-label>
+              </div>
+              <div class="flex items-center">
+                <input type="radio" id="gender-female" wire:model="form.gender" value="female" />
+                <x-label for="gender-female" class="ml-2">{{ __('Female') }}</x-label>
+              </div>
+            </div>
+            @error('form.gender')
+              <x-input-error for="form.gender" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="phone">{{ __('Phone') }}</x-label>
+            <x-input id="phone" class="mt-1 block w-full" type="text" wire:model="form.phone"
+              placeholder="+628123456789" />
+            @error('form.phone')
+              <x-input-error for="form.phone" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="birth_date">{{ __('Birth Date') }}</x-label>
+            <x-input id="birth_date" class="mt-1 block w-full" type="date" wire:model="form.birth_date" />
+            @error('form.birth_date')
+              <x-input-error for="form.birth_date" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="birth_place">{{ __('Birth Place') }}</x-label>
+            <x-input id="birth_place" class="mt-1 block w-full" type="text" wire:model="form.birth_place"
+              placeholder="Jakarta" />
+            @error('form.birth_place')
+              <x-input-error for="form.birth_place" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-3">
+          <div class="w-full">
+            <x-label for="city">{{ __('City') }}</x-label>
+            <x-input id="city" class="mt-1 block w-full" type="text" wire:model="form.city"
+              placeholder="Domisili" />
+            @error('form.city')
+              <x-input-error for="form.city" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+          <div class="w-full">
+            <x-label for="address">{{ __('Address') }}</x-label>
+            <x-input id="address" class="mt-1 block w-full" type="text" wire:model="form.address"
+              placeholder="Jl. Jend. Sudirman" />
+            @error('form.address')
+              <x-input-error for="form.address" class="mt-2" message="{{ $message }}" />
+            @enderror
+          </div>
+        </div>
+        <div class="mt-4">
+          <x-label for="form.education_id" value="Wali Kelas (Opsional)" />
+          <x-select id="form.education_id" class="mt-1 block w-full" wire:model="form.education_id">
+            <option value="">-- Bukan Wali Kelas --</option>
+            @foreach (App\Models\Education::all() as $education)
+              <option value="{{ $education->id }}" {{ $education->id == $form->education_id ? 'selected' : '' }}>
+                {{ $education->name }}
+              </option>
+            @endforeach
+          </x-select>
+          @error('form.education_id')
+            <x-input-error for="form.education_id" class="mt-2" message="{{ $message }}" />
+          @enderror
+        </div>
+
+        <!-- Subjects Selection -->
+        <div class="mt-4">
+          <x-label value="Mata Pelajaran yang Diajarkan" />
+          <div class="mt-2 grid grid-cols-2 gap-3 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 dark:border-gray-700">
+            @foreach ($availableSubjects as $subject)
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  wire:model.number="selectedSubjects" 
+                  value="{{ $subject['id'] }}"
+                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                >
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ $subject['name'] }}</span>
+              </label>
+            @endforeach
+          </div>
+          <p class="mt-1 text-xs text-red-500 dark:text-red-400">* Wajib pilih minimal 1 mata pelajaran</p>
+          @if (empty($selectedSubjects))
+            <x-input-error for="selectedSubjects" class="mt-2" message="Mata pelajaran wajib dipilih" />
+          @endif
+        </div>
+      </x-slot>
+
+      <x-slot name="footer">
+        <x-secondary-button wire:click="$toggle('editing')" wire:loading.attr="disabled">
+          {{ __('Cancel') }}
+        </x-secondary-button>
+
+        <x-button class="ml-2" wire:click="update" wire:loading.attr="disabled" wire:target="form.photo">
+          {{ __('Confirm') }}
+        </x-button>
+      </x-slot>
+    </form>
+  </x-dialog-modal>
+
+  <x-dialog-modal wire:model="showDetail" maxWidth="2xl">
+    <x-slot name="title">
+        <div class="flex items-center justify-between">
+            <span class="font-outfit font-bold text-xl">Detail Guru</span>
+            <button wire:click="$set('showDetail', false)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </x-slot>
+
+    <x-slot name="content">
+      @if ($form->user)
+        <div class="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden mt-2">
+            <!-- Header Section with Profile Photo -->
+            <div class="relative pb-6 border-bottom border-light text-center">
+                <div class="flex flex-col items-center">
+                    <div class="profile-avatar mb-4" style="width: 120px; height: 120px; padding: 4px; background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%); border-radius: 50%;">
+                        <img class="h-full w-full rounded-full object-cover border-4 border-white shadow-lg" 
+                             src="{{ $form->user->profile_photo_url }}"
+                             alt="{{ $form->user->name }}" />
+                    </div>
+                    <h4 class="text-2xl font-bold text-gray-900 dark:text-white mb-1 font-outfit">{{ $form->user->name }}</h4>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="badge badge-primary px-3 py-1 rounded-pill" style="background: rgba(79, 70, 229, 0.1); color: var(--primary-color);">
+                            {{ $form->user->division->name ?? '-' }}
+                        </span>
+                        <span class="badge badge-light px-3 py-1 rounded-pill border">
+                            {{ $form->user->jobTitle->name ?? '-' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
+                <!-- Data Pribadi Section -->
+                <div class="space-y-4">
+                    <h6 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Identitas & Kontak</h6>
+                    
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-id-card fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">NIP / NIK</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->nisn ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-envelope fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Email</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->email }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-phone fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">No. Telepon</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->phone ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-venus-mars fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Jenis Kelamin</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ __($form->user->gender) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alamat & Pendidikan Section -->
+                <div class="space-y-4">
+                    <h6 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Latar Belakang</h6>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-graduation-cap fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Pendidikan Terakhir</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->education->name ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-birthday-cake fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Tgl & Tempat Lahir</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                {{ $form->user->birth_place ?? '-' }}, 
+                                {{ $form->user->birth_date ? \Illuminate\Support\Carbon::parse($form->user->birth_date)->format('d F Y') : '-' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-map-marker-alt fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Domisili</p>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $form->user->city ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <i class="fas fa-home fa-sm"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold leading-none mb-1">Alamat Lengkap</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400 italic">
+                                {{ $form->user->address ?? '-' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      @endif
+    </x-slot>
+
+    <x-slot name="footer">
+        <div class="flex gap-2">
+            <x-secondary-button wire:click="$set('showDetail', false)" class="rounded-xl">
+                Tutup
+            </x-secondary-button>
+            <x-button wire:click="edit('{{ $form->user->id ?? '' }}')" class="rounded-xl">
+                <i class="fas fa-edit mr-2"></i> Edit Data
+            </x-button>
+        </div>
+    </x-slot>
+  </x-dialog-modal>
+
+  <!-- Bulk Delete Confirmation Modal -->
+  <x-confirmation-modal wire:model="confirmingBulkDeletion">
+    <x-slot name="title">
+      Konfirmasi Hapus Multiple Siswa
+    </x-slot>
+
+    <x-slot name="content">
+      <div class="space-y-4">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-red-800 dark:text-red-200 mb-2">
+                Anda akan menghapus {{ count($selectedRows) }} guru sekaligus!
+              </h4>
+              <p class="text-sm text-red-700 dark:text-red-300">
+                Semua data terkait guru yang dipilih akan dihapus secara permanen, termasuk:
+              </p>
+              <ul class="mt-2 ml-4 text-sm text-red-700 dark:text-red-300 list-disc space-y-1">
+                <li>Data pribadi guru</li>
+                <li>Riwayat absensi</li>
+                <li>Registrasi wajah (face recognition)</li>
+                <li>Data terkait lainnya</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          <b>Perhatian:</b> Tindakan ini tidak dapat dibatalkan!
+        </p>
+      </div>
+    </x-slot>
+
+    <x-slot name="footer">
+      <x-secondary-button wire:click="$set('confirmingBulkDeletion', false)" wire:loading.attr="disabled">
+        Batal
+      </x-secondary-button>
+
+      <x-danger-button class="ml-2" wire:click="bulkDelete" wire:loading.attr="disabled">
+        Ya, Hapus Semua ({{ count($selectedRows) }})
+      </x-danger-button>
+    </x-slot>
+  </x-confirmation-modal>
+</div>

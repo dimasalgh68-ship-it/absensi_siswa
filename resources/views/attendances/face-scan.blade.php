@@ -226,17 +226,20 @@
                         $clockInDeadline = null;
                         $clockOutTime = null;
                         $clockInOpenTime = null;
+                        $earliestClockOutTime = null;
                         $now = \Carbon\Carbon::now();
                         $deadlineType = 'waiting';
                         
                         if ($shift) {
                             $clockInEarlyMinutes = (int) \App\Models\Setting::get('clock_in_early_minutes', 60);
                             $clockInLateMinutes = (int) \App\Models\Setting::get('clock_in_late_minutes', 120);
+                            $clockOutEarlyMinutes = (int) \App\Models\Setting::get('clock_out_early_minutes', 30);
                             $scheduleStartTime = \Carbon\Carbon::today()->setTimeFromTimeString($shift->start_time);
                             
                             $clockInOpenTime = $scheduleStartTime->copy()->subMinutes($clockInEarlyMinutes);
                             $clockInDeadline = $scheduleStartTime->copy()->addMinutes($clockInLateMinutes);
                             $clockOutTime = \Carbon\Carbon::today()->setTimeFromTimeString($shift->end_time);
+                            $earliestClockOutTime = $clockOutTime->copy()->subMinutes($clockOutEarlyMinutes);
                             
                             // Determine deadline type
                             if (!$todayAttendance) {
@@ -248,7 +251,9 @@
                                     $deadlineType = 'next_day';
                                 }
                             } elseif ($todayAttendance && !$todayAttendance->time_out) {
-                                if ($now->lt($clockOutTime)) {
+                                if ($now->lt($earliestClockOutTime)) {
+                                    $deadlineType = 'waiting_clock_out';
+                                } elseif ($now->gte($earliestClockOutTime)) {
                                     $deadlineType = 'clock_out';
                                 } else {
                                     $deadlineType = 'next_day';
@@ -276,6 +281,7 @@
                                     <h3 class="font-bold text-gray-900 dark:text-white text-sm">
                                         @if($deadlineType === 'waiting') Menunggu Waktu Absensi
                                         @elseif($deadlineType === 'clock_in') Batas Waktu Absensi Masuk
+                                        @elseif($deadlineType === 'waiting_clock_out') Menunggu Waktu Absensi Keluar
                                         @elseif($deadlineType === 'clock_out') Waktu Absensi Keluar
                                         @else Absensi Besok
                                         @endif
@@ -289,12 +295,13 @@
                                 <div id="scan-countdown-display" class="text-2xl font-bold 
                                     @if($deadlineType === 'waiting') text-gray-600 dark:text-gray-400
                                     @elseif($deadlineType === 'clock_in') text-red-600 dark:text-red-400
+                                    @elseif($deadlineType === 'waiting_clock_out') text-orange-600 dark:text-orange-400
                                     @elseif($deadlineType === 'clock_out') text-blue-600 dark:text-blue-400
                                     @else text-purple-600 dark:text-purple-400
                                     @endif
                                     tabular-nums font-mono">--:--:--</div>
                                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
-                                    @if($deadlineType === 'waiting') Dibuka Dalam
+                                    @if($deadlineType === 'waiting' || $deadlineType === 'waiting_clock_out') Dibuka Dalam
                                     @else Sisa Waktu
                                     @endif
                                 </p>
@@ -304,6 +311,7 @@
                             <div id="scan-countdown-progress" class="h-full 
                                 @if($deadlineType === 'waiting') bg-gradient-to-r from-gray-500 to-gray-600
                                 @elseif($deadlineType === 'clock_in') bg-gradient-to-r from-red-500 to-orange-500
+                                @elseif($deadlineType === 'waiting_clock_out') bg-gradient-to-r from-orange-500 to-yellow-500
                                 @elseif($deadlineType === 'clock_out') bg-gradient-to-r from-blue-500 to-indigo-500
                                 @else bg-gradient-to-r from-purple-500 to-indigo-500
                                 @endif
@@ -312,7 +320,7 @@
                         <div class="mt-3 flex justify-between text-xs text-gray-600 dark:text-gray-400">
                             <span>Buka: <strong class="text-green-600 dark:text-green-400">{{ $clockInOpenTime->format('H:i') }}</strong></span>
                             <span>Deadline: <strong class="text-red-600 dark:text-red-400">{{ $clockInDeadline->format('H:i') }}</strong></span>
-                            <span>Keluar: <strong class="text-blue-600 dark:text-blue-400">{{ $clockOutTime->format('H:i') }}</strong></span>
+                            <span>Keluar: <strong class="text-blue-600 dark:text-blue-400">{{ $earliestClockOutTime->format('H:i') }} - {{ $clockOutTime->format('H:i') }}</strong></span>
                         </div>
                     </div>
 
@@ -325,6 +333,8 @@
                                 $targetTime = $clockInOpenTime;
                             } elseif ($deadlineType === 'clock_in') {
                                 $targetTime = $clockInDeadline;
+                            } elseif ($deadlineType === 'waiting_clock_out') {
+                                $targetTime = $earliestClockOutTime;
                             } elseif ($deadlineType === 'clock_out') {
                                 $targetTime = $clockOutTime;
                             } else {
@@ -413,15 +423,21 @@
                             
                             // Clock Out button logic
                             if (clockOutDisabledByTime) {
-                                const clockOutTime = new Date('{{ $clockOutTime->format('Y-m-d H:i:s') }}').getTime();
+                                const earliestClockOutTime = new Date('{{ $earliestClockOutTime->format('Y-m-d H:i:s') }}').getTime();
                                 
                                 @if($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out)
-                                if (now < clockOutTime) {
+                                if (now >= earliestClockOutTime) {
                                     // Time to enable clock out
                                     clockOutBtn.disabled = false;
                                     clockOutBtn.removeAttribute('data-reason');
                                     clockOutBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
                                     clockOutBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                                    
+                                    // Show notification
+                                    if (window.scanClockOutNotificationShown !== true) {
+                                        speak('Waktu absensi keluar telah dibuka. Anda dapat melakukan absensi keluar sekarang.');
+                                        window.scanClockOutNotificationShown = true;
+                                    }
                                 }
                                 @endif
                             }
@@ -483,13 +499,17 @@
                             
                             <button id="clockOutBtn" 
                                     @if (!$hasFaceRegistration || !$todayAttendance || !$todayAttendance->time_in || ($todayAttendance && $todayAttendance->time_out)) disabled 
-                                    @elseif($deadlineType !== 'clock_out') disabled data-reason="time"
+                                    @elseif($deadlineType === 'waiting_clock_out') disabled data-reason="time"
                                     @endif
                                     class="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition relative group">
                                 <span class="flex items-center justify-center gap-2">
                                     🕐 Absen Keluar
                                 </span>
-                                @if($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out && $deadlineType === 'clock_out')
+                                @if($deadlineType === 'waiting_clock_out')
+                                <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                                    Belum Waktunya
+                                </span>
+                                @elseif($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out && $deadlineType === 'clock_out')
                                 <span class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
                                     Aktif
                                 </span>
@@ -523,6 +543,21 @@
                                     <p class="font-bold text-green-800 dark:text-green-200 text-sm">Siap Absen Masuk</p>
                                     <p class="text-green-700 dark:text-green-300 text-xs mt-1">
                                         Anda dapat melakukan absensi masuk sekarang. Deadline: <strong>{{ $clockInDeadline->format('H:i') }} WIB</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        @elseif($deadlineType === 'waiting_clock_out' && $todayAttendance && !$todayAttendance->time_out)
+                        <div class="mt-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="font-bold text-orange-800 dark:text-orange-200 text-sm">Menunggu Waktu Absen Keluar</p>
+                                    <p class="text-orange-700 dark:text-orange-300 text-xs mt-1">
+                                        Absensi keluar akan dibuka pada <strong>{{ $earliestClockOutTime->format('H:i') }} WIB</strong>. 
+                                        Anda sudah absen masuk pada <strong>{{ $todayAttendance->time_in }}</strong>.
                                     </p>
                                 </div>
                             </div>
@@ -720,7 +755,13 @@
                     registeredDescriptor = new Float32Array(data.descriptor);
                     console.log('Registered face loaded successfully');
                     updateLoadingProgress(4); // Step 5: Ready!
-                    setTimeout(hideLoadingScreen, 800);
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        // Speak welcome message after loading completes
+                        setTimeout(() => {
+                            speak('Sistem siap. Posisikan wajah Anda di depan kamera untuk melakukan absensi.');
+                        }, 500);
+                    }, 800);
                 } else {
                     // This shouldn't happen since we checked in initialize()
                     throw new Error('Face descriptor not found');
@@ -770,25 +811,25 @@
                     
                     ctx.clearRect(0, 0, overlay.width, overlay.height);
                 
-                if (!detection) {
-                    // No face detected
-                    if (faceDetected) {
-                        // Face was detected before, now lost
-                        hasSpokenFaceDetected = false;
-                        faceDetected = false;
-                        faceStatusIcon.textContent = '❌';
-                        faceStatusText.textContent = 'Wajah tidak terdeteksi';
-                        faceStatus.className = 'absolute top-4 left-4 bg-red-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
-                    }
-                } else {
-                    // Face detected - no audio notification
-                    if (!faceDetected) {
-                        faceDetected = true;
-                        faceStatusIcon.textContent = '✅';
-                        faceStatusText.textContent = ' terdeteksi - Siap!';
-                        faceStatus.className = 'absolute top-4 left-4 bg-green-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
-                    }
-                    
+                    if (!detection) {
+                        // No face detected
+                        if (faceDetected) {
+                            // Face was detected before, now lost
+                            hasSpokenFaceDetected = false;
+                            faceDetected = false;
+                            faceStatusIcon.textContent = '❌';
+                            faceStatusText.textContent = 'Wajah tidak terdeteksi';
+                            faceStatus.className = 'absolute top-4 left-4 bg-red-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
+                        }
+                    } else {
+                        // Face detected - no audio notification
+                        if (!faceDetected) {
+                            faceDetected = true;
+                            faceStatusIcon.textContent = '✅';
+                            faceStatusText.textContent = 'Wajah terdeteksi - Siap!';
+                            faceStatus.className = 'absolute top-4 left-4 bg-green-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
+                        }
+                        
                         // Draw face box
                         drawFaceBox(ctx, detection.detection.box);
                     }
@@ -961,7 +1002,7 @@
             }
         }
 
-        // Get GPS location
+        // Get GPS location with enhanced data for anti-spoofing
         function getLocation() {
             if (!navigator.geolocation) {
                 showError('Browser Anda tidak mendukung GPS');
@@ -973,11 +1014,17 @@
                 (position) => {
                     currentPosition = {
                         latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        altitudeAccuracy: position.coords.altitudeAccuracy,
+                        heading: position.coords.heading,
+                        speed: position.coords.speed,
+                        timestamp: position.timestamp
                     };
                     
                     gpsIcon.textContent = '✅';
-                    gpsText.textContent = 'Lokasi terdeteksi';
+                    gpsText.textContent = `Lokasi terdeteksi (±${Math.round(position.coords.accuracy)}m)`;
                     gpsStatus.classList.remove('bg-opacity-50');
                     gpsStatus.classList.add('bg-green-600');
                     
@@ -985,12 +1032,25 @@
                         locationInfo.classList.remove('hidden');
                         locationText.textContent = `Lat: ${currentPosition.latitude.toFixed(6)}, Long: ${currentPosition.longitude.toFixed(6)}`;
                     }
+
+                    // Log GPS data for debugging
+                    console.log('GPS Data:', {
+                        accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        speed: position.coords.speed,
+                        timestamp: position.timestamp
+                    });
                 },
                 (error) => {
                     gpsIcon.textContent = '❌';
                     gpsText.textContent = 'GPS tidak tersedia';
                     gpsStatus.classList.add('bg-red-600');
                     showError('Tidak dapat mengakses GPS. Pastikan GPS aktif dan izin lokasi diberikan.');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         }
@@ -1043,6 +1103,21 @@
                 formData.append('type', type);
                 formData.append('similarity', verification.similarity);
                 formData.append('verified_in_browser', 'true');
+                
+                // Add anti-spoofing GPS data
+                if (currentPosition.accuracy !== null && currentPosition.accuracy !== undefined) {
+                    formData.append('accuracy', currentPosition.accuracy);
+                }
+                if (currentPosition.altitude !== null && currentPosition.altitude !== undefined) {
+                    formData.append('altitude', currentPosition.altitude);
+                }
+                if (currentPosition.speed !== null && currentPosition.speed !== undefined) {
+                    formData.append('speed', currentPosition.speed);
+                }
+                if (currentPosition.timestamp) {
+                    formData.append('timestamp', Math.floor(currentPosition.timestamp / 1000));
+                }
+                
                 formData.append('_token', '{{ csrf_token() }}');
 
                 try {
@@ -1181,16 +1256,14 @@
             soundEnabled = !soundEnabled;
             soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
             soundToggle.title = soundEnabled ? 'Matikan Suara' : 'Nyalakan Suara';
+            soundToggle.classList.toggle('bg-blue-600', soundEnabled);
+            soundToggle.classList.toggle('bg-gray-600', !soundEnabled);
             
             // Cancel any ongoing speech when muting
             if (!soundEnabled) {
                 stopSpeech();
             }
-            
-            // Give feedback
-            if (soundEnabled) {
-                speak('Suara diaktifkan');
-            }
+            // No audio feedback when toggling
         });
 
         // Show error message

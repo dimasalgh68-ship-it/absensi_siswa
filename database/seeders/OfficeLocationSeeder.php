@@ -17,14 +17,14 @@ class OfficeLocationSeeder extends Seeder
                 'name' => 'Sekolah Pusat',
                 'latitude' => -6.200000,
                 'longitude' => 106.816666,
-                'radius' => 100,
+                'radius_meters' => 100,
                 'is_active' => true,
             ],
             [
                 'name' => 'Sekolah Cabang Bandung',
                 'latitude' => -6.914744,
                 'longitude' => 107.609810,
-                'radius' => 150,
+                'radius_meters' => 150,
                 'is_active' => true,
             ],
         ];

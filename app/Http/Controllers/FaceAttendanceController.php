@@ -71,6 +71,10 @@ class FaceAttendanceController extends Controller
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'type' => 'required|in:clock_in,clock_out',
+            'accuracy' => 'nullable|numeric|min:0|max:1000',  // HIGH SEVERITY BUG FIX #11: Add max accuracy
+            'altitude' => 'nullable|numeric|between:-500,10000',  // Validate altitude range
+            'speed' => 'nullable|numeric|min:0|max:300',  // Add max speed (km/h)
+            'timestamp' => 'nullable|integer|min:0',  // Validate timestamp
         ]);
 
         try {
@@ -96,9 +100,35 @@ class FaceAttendanceController extends Controller
             }
 
             // Step 1: Validasi Lokasi (GPS)
+            // HIGH SEVERITY BUG FIX #14: Validate GPS precision
+            $latitude = $request->latitude;
+            $longitude = $request->longitude;
+            
+            // Check decimal precision (max 8 decimal places = ~1.1mm accuracy)
+            $latParts = explode('.', (string)$latitude);
+            $lngParts = explode('.', (string)$longitude);
+            
+            if (isset($latParts[1]) && strlen($latParts[1]) > 8) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Presisi latitude terlalu tinggi',
+                ], 422);
+            }
+            
+            if (isset($lngParts[1]) && strlen($lngParts[1]) > 8) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Presisi longitude terlalu tinggi',
+                ], 422);
+            }
+            
             $locationValidation = $this->geoService->validateLocation(
-                $request->latitude,
-                $request->longitude
+                $latitude,
+                $longitude,
+                $request->input('accuracy'),
+                $request->input('altitude'),
+                $request->input('speed'),
+                $request->input('timestamp')
             );
 
             if (!$locationValidation['valid']) {
@@ -109,39 +139,24 @@ class FaceAttendanceController extends Controller
                 ], 422);
             }
 
-            // Step 2: Face verification (already done in browser if verified_in_browser is true)
-            $similarity = $request->input('similarity', 0);
-            $verifiedInBrowser = $request->input('verified_in_browser', false);
+            // Step 2: Face verification - ALWAYS verify server-side
+            // CRITICAL BUG FIX #8: Never trust client-side similarity score
+            // Always perform server-side verification regardless of browser verification
+            $faceValidation = $this->faceService->verifyFace(
+                $user,
+                $photoFile
+            );
 
-            if ($verifiedInBrowser) {
-                // Validate similarity from browser
-                $threshold = \App\Models\Setting::get('face_similarity_threshold', 70);
-                if ($similarity < $threshold) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Wajah tidak cocok. Similarity score harus minimal ' . $threshold . '%. Skor Anda: ' . number_format($similarity, 1) . '%',
-                        'similarity' => $similarity,
-                        'step' => 'face',
-                    ], 422);
-                }
-            } else {
-                // Fallback: verify in PHP if not verified in browser
-                $faceValidation = $this->faceService->verifyFace(
-                    $user,
-                    $photoFile
-                );
-
-                if (!$faceValidation['success']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $faceValidation['message'],
-                        'similarity' => $faceValidation['similarity'],
-                        'step' => 'face',
-                    ], 422);
-                }
-
-                $similarity = $faceValidation['similarity'];
+            if (!$faceValidation['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $faceValidation['message'],
+                    'similarity' => $faceValidation['similarity'],
+                    'step' => 'face',
+                ], 422);
             }
+
+            $similarity = $faceValidation['similarity'];
 
             // Step 3: Pencatatan Log Absensi
             $photoPath = $photoFile->store('face-verifications', 'public');
@@ -156,14 +171,17 @@ class FaceAttendanceController extends Controller
                 'validation_method' => 'face',
             ];
 
-            // Cek data absensi hari ini
+            // CRITICAL BUG FIX #9: Prevent race condition with pessimistic locking
+            // Use lockForUpdate() to prevent duplicate clock-in/out
             $attendance = Attendance::where('user_id', $user->id)
                 ->whereDate('date', today())
+                ->lockForUpdate()
                 ->first();
 
             if ($request->type === 'clock_in') {
                 // Check if already clocked in today
                 if ($attendance && $attendance->time_in) {
+                    DB::rollBack();
                     return response()->json([
                         'success' => false,
                         'message' => 'Anda sudah melakukan absen masuk hari ini pada ' . Carbon::parse($attendance->time_in)->format('H:i:s'),
@@ -182,7 +200,6 @@ class FaceAttendanceController extends Controller
                         $clockInEarliestTime = $scheduleStartTime->copy()->subMinutes($clockInEarlyMinutes);
                         $clockInLatestTime = $scheduleStartTime->copy()->addMinutes($clockInLateMinutes);
                         
-                        // Check if trying to clock in too early
                         if (now()->lt($clockInEarliestTime)) {
                             $minutesUntil = now()->diffInMinutes($clockInEarliestTime);
                             $hoursUntil = floor($minutesUntil / 60);
@@ -192,6 +209,7 @@ class FaceAttendanceController extends Controller
                                 ? "{$hoursUntil} jam {$minsUntil} menit" 
                                 : "{$minsUntil} menit";
                             
+                            DB::rollBack();
                             return response()->json([
                                 'success' => false,
                                 'message' => "Absen masuk untuk shift {$schedule->name} ({$schedule->start_time} - {$schedule->end_time}) hanya dapat dilakukan {$clockInEarlyMinutes} menit sebelum jam masuk. Silakan tunggu {$timeString} lagi.",
@@ -220,6 +238,7 @@ class FaceAttendanceController extends Controller
                                 Attendance::clearUserAttendanceCache($user, today());
                             }
                             
+                            DB::rollBack();
                             return response()->json([
                                 'success' => false,
                                 'message' => "Waktu absen masuk untuk shift {$schedule->name} ({$schedule->start_time} - {$schedule->end_time}) telah berakhir. Batas waktu absen adalah {$clockInLateMinutes} menit setelah jam masuk ({$clockInLatestTime->format('H:i')}). Anda tercatat ALPHA hari ini.",
@@ -277,6 +296,7 @@ class FaceAttendanceController extends Controller
             } else {
                 // Clock out
                 if ($attendance && $attendance->time_out) {
+                    DB::rollBack();
                     return response()->json([
                         'success' => false,
                         'message' => 'Anda sudah melakukan absen keluar hari ini pada ' . Carbon::parse($attendance->time_out)->format('H:i:s'),
@@ -285,6 +305,7 @@ class FaceAttendanceController extends Controller
 
                 // Check if can clock out (must have clocked in)
                 if (!$attendance || !$attendance->time_in) {
+                    DB::rollBack();
                     return response()->json([
                         'success' => false,
                         'message' => 'Anda belum melakukan absen masuk hari ini.',
@@ -296,20 +317,24 @@ class FaceAttendanceController extends Controller
                 if ($schedule_id) {
                     $schedule = \App\Models\Shift::find($schedule_id);
                     if ($schedule) {
-                        $clockOutEarlyMinutes = \App\Models\Setting::get('clock_out_early_minutes', 30);
+                        $clockOutEarlyMinutes = (int) \App\Models\Setting::get('clock_out_early_minutes', 30);
                         $scheduleEndTime = Carbon::today()->setTimeFromTimeString($schedule->end_time);
-                        $allowedClockOutTime = $scheduleEndTime->copy()->subMinutes($clockOutEarlyMinutes);
                         
-                        if (now()->lt($allowedClockOutTime)) {
-                            $diff = now()->diff($allowedClockOutTime);
+                        // Earliest allowed clock out time (X minutes before schedule end time)
+                        $earliestClockOutTime = $scheduleEndTime->copy()->subMinutes($clockOutEarlyMinutes);
+                        
+                        // Check if trying to clock out too early
+                        if (now()->lt($earliestClockOutTime)) {
+                            $diff = now()->diff($earliestClockOutTime);
                             $timeRemaining = "";
                             if ($diff->h > 0) $timeRemaining .= $diff->h . " jam ";
                             if ($diff->i > 0) $timeRemaining .= $diff->i . " menit";
                             if ($timeRemaining === "") $timeRemaining = "beberapa detik";
 
+                            DB::rollBack();
                             return response()->json([
                                 'success' => false,
-                                'message' => "Absen keluar hanya dapat dilakukan mulai " . $allowedClockOutTime->format('H:i') . " ({$clockOutEarlyMinutes} menit sebelum jam pulang). Silakan tunggu {$timeRemaining} lagi.",
+                                'message' => "Absen keluar untuk shift {$schedule->name} ({$schedule->start_time} - {$schedule->end_time}) hanya dapat dilakukan mulai pukul " . $earliestClockOutTime->format('H:i') . " ({$clockOutEarlyMinutes} menit sebelum jam pulang). Silakan tunggu {$timeRemaining} lagi.",
                             ], 422);
                         }
                     }
@@ -337,13 +362,19 @@ class FaceAttendanceController extends Controller
                 'success' => true,
                 'message' => $message,
                 'data' => [
-                    'attendance' => $attendance,
+                    'attendance' => [
+                        'id' => $attendance->id,
+                        'date' => $attendance->date->format('Y-m-d'),
+                        'time_in' => $attendance->time_in,
+                        'time_out' => $attendance->time_out,
+                        'status' => $attendance->status,
+                    ],
                     'similarity' => $similarity,
                 ],
             ];
 
             // Add location info only if office exists
-            if ($locationValidation['office']) {
+            if (isset($locationValidation['office']) && $locationValidation['office']) {
                 $responseData['data']['location'] = [
                     'office' => $locationValidation['office']->name,
                     'distance' => $locationValidation['distance'],

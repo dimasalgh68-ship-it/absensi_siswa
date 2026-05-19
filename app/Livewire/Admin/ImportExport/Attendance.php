@@ -82,9 +82,11 @@ class Attendance extends Component
 
     public function import()
     {
-        if (Auth::user()->isNotAdmin) {
-            abort(403);
+        // HIGH SEVERITY BUG FIX #12: Use proper authorization instead of attribute check
+        if (!auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk mengimpor data absensi.');
         }
+        
         try {
             $this->validate();
 
@@ -99,8 +101,9 @@ class Attendance extends Component
 
     public function export()
     {
-        if (Auth::user()->isNotAdmin) {
-            abort(403);
+        // HIGH SEVERITY BUG FIX #12: Use proper authorization instead of attribute check
+        if (!auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk mengekspor data absensi.');
         }
 
         $division = $this->division ? Division::find($this->division)?->name : null;

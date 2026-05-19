@@ -69,8 +69,21 @@ class FaceRegistrationController extends Controller
                 try {
                     $embedding = json_decode($request->descriptor, true);
                     
+                    // CRITICAL BUG FIX #10: Strict validation of descriptor format
+                    // Validate descriptor is array with exactly 128 elements
                     if (!is_array($embedding) || count($embedding) !== 128) {
-                        throw new \Exception('Invalid descriptor format');
+                        throw new \Exception('Invalid descriptor format: must be array with 128 elements');
+                    }
+                    
+                    // Validate all elements are numeric
+                    foreach ($embedding as $value) {
+                        if (!is_numeric($value)) {
+                            throw new \Exception('Invalid descriptor: all elements must be numeric');
+                        }
+                        // Validate values are within reasonable range for face embeddings
+                        if ($value < -10 || $value > 10) {
+                            throw new \Exception('Invalid descriptor: values out of expected range');
+                        }
                     }
                 } catch (\Exception $e) {
                     Log::error('Failed to parse descriptor: ' . $e->getMessage());

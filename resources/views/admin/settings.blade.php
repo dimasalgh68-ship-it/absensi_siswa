@@ -348,6 +348,129 @@
         </div>
     </div>
 
+    <!-- Pengaturan GPS Anti-Spoofing -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-shield-alt mr-2"></i>Pengaturan GPS Anti-Spoofing
+            </h6>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('admin.settings.update-gps-anti-spoofing') }}" method="POST">
+                @csrf
+                
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i> <strong>Informasi:</strong><br>
+                    Fitur ini mencegah manipulasi lokasi GPS menggunakan aplikasi fake GPS atau GPS spoofer. Sistem akan mendeteksi berbagai indikator GPS palsu.
+                </div>
+
+                <div class="row">
+                    <!-- Enable/Disable Anti-Spoofing -->
+                    <div class="col-md-12 mb-4">
+                        <div class="custom-control custom-switch custom-control-lg">
+                            <input type="checkbox" 
+                                   class="custom-control-input" 
+                                   id="gps_anti_spoofing_enabled" 
+                                   name="gps_anti_spoofing_enabled"
+                                   value="1"
+                                   {{ old('gps_anti_spoofing_enabled', $gpsAntiSpoofingEnabled ?? true) ? 'checked' : '' }}>
+                            <label class="custom-control-label font-weight-bold" for="gps_anti_spoofing_enabled">
+                                <i class="fas fa-shield-alt text-success"></i> Aktifkan GPS Anti-Spoofing
+                            </label>
+                        </div>
+                        <small class="form-text text-muted ml-4">
+                            <i class="fas fa-info-circle"></i> Jika diaktifkan, sistem akan memvalidasi keaslian data GPS sebelum menerima absensi
+                        </small>
+                    </div>
+
+                    <!-- Threshold Setting -->
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="gps_anti_spoofing_threshold">
+                                <i class="fas fa-sliders-h text-primary"></i> Threshold Deteksi (Sensitivitas)
+                            </label>
+                            <input type="number" 
+                                   name="gps_anti_spoofing_threshold" 
+                                   id="gps_anti_spoofing_threshold"
+                                   value="{{ old('gps_anti_spoofing_threshold', $gpsAntiSpoofingThreshold ?? 50) }}"
+                                   min="20"
+                                   max="100"
+                                   step="5"
+                                   class="form-control"
+                                   oninput="updateSpoofingThresholdDisplay(this.value)"
+                                   required>
+                            @error('gps_anti_spoofing_threshold')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Skor suspicion minimum untuk menolak GPS (20-100). Semakin rendah, semakin ketat validasi.
+                            </small>
+                        </div>
+
+                        <!-- Visual Indicator -->
+                        <div class="mb-4">
+                            <label class="font-weight-bold">Tingkat Sensitivitas:</label>
+                            <div class="progress" style="height: 30px;">
+                                <div id="spoofing-threshold-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger" 
+                                     role="progressbar" 
+                                     style="width: {{ 100 - ($gpsAntiSpoofingThreshold ?? 50) }}%"
+                                     aria-valuenow="{{ 100 - ($gpsAntiSpoofingThreshold ?? 50) }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    <span id="spoofing-threshold-text" class="font-weight-bold">{{ $gpsAntiSpoofingThreshold ?? 50 }}</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted">Sangat Ketat (20)</small>
+                                <small id="spoofing-threshold-label" class="font-weight-bold text-danger">
+                                    @if(($gpsAntiSpoofingThreshold ?? 50) <= 35)
+                                        Sangat Ketat
+                                    @elseif(($gpsAntiSpoofingThreshold ?? 50) <= 60)
+                                        Ketat
+                                    @else
+                                        Normal
+                                    @endif
+                                </small>
+                                <small class="text-muted">Normal (100)</small>
+                            </div>
+                        </div>
+
+                        <!-- Detection Indicators -->
+                        <div class="alert alert-secondary">
+                            <strong><i class="fas fa-search"></i> Indikator yang Dideteksi:</strong><br>
+                            • Koordinat tidak valid atau null island (0,0)<br>
+                            • Akurasi GPS terlalu sempurna atau terlalu rendah<br>
+                            • Ketinggian dan kecepatan tidak wajar<br>
+                            • Data GPS tidak fresh (lebih dari 1 menit)<br>
+                            • Pola koordinat mencurigakan (angka berulang)<br>
+                            • Koordinat terlalu dibulatkan (desimal kurang dari 4 digit)
+                        </div>
+
+                        <!-- Recommendations -->
+                        <div class="alert alert-warning">
+                            <strong><i class="fas fa-lightbulb"></i> Rekomendasi:</strong><br>
+                            • <strong>20-35</strong>: Sangat ketat, dapat menolak GPS yang sah dalam kondisi tertentu<br>
+                            • <strong>40-60</strong>: <span class="badge badge-success">Rekomendasi</span> Keseimbangan antara keamanan dan kenyamanan<br>
+                            • <strong>65-100</strong>: Normal, hanya menolak GPS yang jelas palsu
+                        </div>
+
+                        <!-- Warning -->
+                        <div class="alert alert-danger">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Perhatian:</strong><br>
+                            • Threshold terlalu rendah (<30) dapat menyebabkan GPS asli ditolak<br>
+                            • Threshold terlalu tinggi (>80) dapat membiarkan beberapa GPS palsu lolos<br>
+                            • Disarankan menggunakan 40-60 untuk hasil optimal
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save mr-1"></i> Simpan Pengaturan
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
         function updateThresholdDisplay(value) {
             const bar = document.getElementById('threshold-bar');

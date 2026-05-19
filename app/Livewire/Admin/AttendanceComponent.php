@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;  // HIGH SEVERITY BUG FIX #13: Add logging
 use Laravel\Jetstream\InteractsWithBanner;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -113,8 +114,19 @@ class AttendanceComponent extends Component
             if ($attendance->attachment) {
                 $this->currentAttendance['attachment'] = $attendance->attachment_url;
             }
+            
+            // HIGH SEVERITY BUG FIX #15: Add null check for shift
             if ($attendance->shift_id) {
-                $this->currentAttendance['shift'] = $attendance->shift;
+                $shift = $attendance->shift;
+                if ($shift) {
+                    $this->currentAttendance['shift'] = $shift;
+                } else {
+                    Log::warning('Shift not found for attendance', [
+                        'attendance_id' => $attendanceId,
+                        'shift_id' => $attendance->shift_id,
+                    ]);
+                    $this->currentAttendance['shift'] = null;
+                }
             }
         }
     }
@@ -190,7 +202,16 @@ class AttendanceComponent extends Component
                 $this->closeEditModal();
             }
         } catch (\Exception $e) {
-            $this->banner('Gagal memperbarui data absensi: ' . $e->getMessage(), 'danger');
+            // HIGH SEVERITY BUG FIX #13: Proper error handling with logging
+            Log::error('Attendance update failed', [
+                'user_id' => auth()->id(),
+                'attendance_id' => $this->editingAttendanceId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Show generic message to user
+            $this->banner('Gagal memperbarui data absensi. Silakan hubungi administrator.', 'danger');
         }
     }
 
@@ -226,7 +247,16 @@ class AttendanceComponent extends Component
                 $this->dispatch('refresh');
             }
         } catch (\Exception $e) {
-            $this->banner('Gagal menghapus data absensi: ' . $e->getMessage());
+            // HIGH SEVERITY BUG FIX #13: Proper error handling with logging
+            Log::error('Attendance deletion failed', [
+                'user_id' => auth()->id(),
+                'attendance_id' => $attendanceId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Show generic message to user
+            $this->banner('Gagal menghapus data absensi. Silakan hubungi administrator.', 'danger');
         }
     }
 
@@ -237,7 +267,13 @@ class AttendanceComponent extends Component
     {
         // Validate status
         if (!in_array($status, ['present', 'late', 'excused', 'sick', 'absent'])) {
-            $this->banner('Status tidak valid!');
+            // HIGH SEVERITY BUG FIX #13: Log invalid status attempts
+            Log::warning('Invalid status attempted', [
+                'user_id' => auth()->id(),
+                'attendance_id' => $attendanceId,
+                'status' => $status,
+            ]);
+            $this->banner('Status tidak valid!', 'danger');
             return;
         }
 
@@ -264,7 +300,17 @@ class AttendanceComponent extends Component
                 $this->dispatch('refresh');
             }
         } catch (\Exception $e) {
-            $this->banner('Gagal memperbarui status: ' . $e->getMessage());
+            // HIGH SEVERITY BUG FIX #13: Proper error handling with logging
+            Log::error('Status update failed', [
+                'user_id' => auth()->id(),
+                'attendance_id' => $attendanceId,
+                'status' => $status,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Show generic message to user
+            $this->banner('Gagal mengubah status. Silakan hubungi administrator.', 'danger');
         }
     }
 
@@ -293,7 +339,17 @@ class AttendanceComponent extends Component
             }
 
             // Try to pick a default schedule
-            $scheduleId = Shift::first()?->id;
+            // BUG FIX: Validate shift exists before using
+            $shift = Shift::first();
+            if (!$shift) {
+                Log::warning('No shifts configured for attendance creation', [
+                    'user_id' => $userId,
+                    'date' => $date,
+                ]);
+                $this->banner('Tidak ada jadwal shift yang dikonfigurasi. Hubungi administrator.', 'danger');
+                return;
+            }
+            $scheduleId = $shift->id;
 
             // Create attendance with status only
             Attendance::create([

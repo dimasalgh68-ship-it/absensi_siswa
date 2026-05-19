@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'user' => \App\Http\Middleware\UserMiddleware::class,
             'teacher' => \App\Http\Middleware\EnsureUserIsTeacher::class,
             'student' => \App\Http\Middleware\EnsureUserIsStudent::class,
+            'only_admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
         
         // Trust proxies for ngrok/reverse proxy support

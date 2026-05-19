@@ -25,10 +25,47 @@ class AttendancesImport implements ToModel, WithHeadingRow, WithValidation, Skip
     public function model(array $row)
     {
         [$lat, $lng] = [null, null];
+        
+        // CRITICAL BUG FIX #4: Validate coordinates before using them
         if (isset($row['coordinates'])) {
             [$lat, $lng] = explode(',', $row['coordinates']);
+            
+            // Validate latitude and longitude ranges
+            $lat = trim($lat);
+            $lng = trim($lng);
+            
+            $lat_double = doubleval($lat);
+            $lng_double = doubleval($lng);
+            
+            // Check if coordinates are within valid ranges
+            if ($lat_double < -90 || $lat_double > 90 || $lng_double < -180 || $lng_double > 180) {
+                // Invalid coordinates, set to null
+                $lat = null;
+                $lng = null;
+            } else {
+                $lat = $lat_double;
+                $lng = $lng_double;
+            }
         }
-        $shift_id = Shift::where('name', $row['shift'])->first()?->id ?? $row['shift_id'];
+        
+        // CRITICAL BUG FIX #5: Prevent SQL Injection - validate shift name before query
+        $shift_id = null;
+        if (isset($row['shift']) && !empty($row['shift'])) {
+            // Sanitize shift name - only allow alphanumeric, spaces, and hyphens
+            $shiftName = trim($row['shift']);
+            
+            // Validate shift name format (prevent SQL injection)
+            if (preg_match('/^[a-zA-Z0-9\s\-]+$/', $shiftName)) {
+                // Use parameterized query (Laravel's where() uses prepared statements)
+                $shift = Shift::where('name', $shiftName)->first();
+                $shift_id = $shift?->id ?? ($row['shift_id'] ?? null);
+            } else {
+                // Invalid shift name format, use shift_id if provided
+                $shift_id = $row['shift_id'] ?? null;
+            }
+        } else {
+            $shift_id = $row['shift_id'] ?? null;
+        }
 
         $attendance = (new Attendance)->forceFill([
             'user_id' => $row['user_id'],
@@ -37,8 +74,8 @@ class AttendancesImport implements ToModel, WithHeadingRow, WithValidation, Skip
             'time_in' => $row['time_in'],
             'time_out' => $row['time_out'],
             'shift_id' => $shift_id,
-            'latitude' => doubleval($lat),
-            'longitude' => doubleval($lng),
+            'latitude' => $lat,
+            'longitude' => $lng,
             'status' => $this->getStatus($row['status']) ?? $row['raw_status'],
             'note' => $row['note'],
             'attachment' => $row['attachment'],

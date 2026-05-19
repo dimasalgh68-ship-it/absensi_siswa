@@ -17,18 +17,28 @@ class TaskController extends Controller
 
     public function create()
     {
+        // SECURITY BUG FIX: Only admin can create tasks
+        if (!auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk membuat tugas.');
+        }
+
         $users = User::where('group', 'user')->get();
         return view('admin.tasks.create', compact('users'));
     }
 
     public function store(Request $request)
     {
+        // SECURITY BUG FIX: Only admin can create tasks
+        if (!auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk membuat tugas.');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'assigned_to' => 'required|in:all_users,specific_users',
             'selected_users' => 'required_if:assigned_to,specific_users|array',
-            'due_date' => 'required|date|after:now',
+            'due_date' => 'required|date|after_or_equal:today',  // BUG FIX: Use timezone-aware validation
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'link' => 'nullable|url',
         ]);
@@ -43,7 +53,7 @@ class TaskController extends Controller
             'description' => $request->description,
             'assigned_to' => $request->assigned_to,
             'due_date' => $request->due_date,
-            'created_by' => auth()->id,
+            'created_by' => auth()->id(),  // BUG FIX: Added parentheses to call the method
             'image_path' => $imagePath,
             'link' => $request->link,
             'status' => 'active',
@@ -57,7 +67,7 @@ class TaskController extends Controller
             );
         }
 
-        return redirect()->route('admin.tasks')->with('success', 'Task created successfully!');
+        return redirect()->route(auth()->user()->isTeacher ? 'teacher.tasks' : 'admin.tasks')->with('success', 'Task created successfully!');
     }
 
     public function show(Task $task)
@@ -83,6 +93,11 @@ class TaskController extends Controller
 
     public function edit(Task $task)
     {
+        // SECURITY BUG FIX: Only task creator or admin can edit
+        if (auth()->user()->id !== $task->created_by && !auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit tugas ini.');
+        }
+
         $users = User::where('group', 'user')->get();
         $task->load('assignments');
         return view('admin.tasks.edit', compact('task', 'users'));
@@ -90,6 +105,11 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task)
     {
+        // SECURITY BUG FIX: Only task creator or admin can update
+        if (auth()->user()->id !== $task->created_by && !auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk mengubah tugas ini.');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -128,30 +148,44 @@ class TaskController extends Controller
             );
         }
 
-        return redirect()->route('admin.tasks')->with('success', 'Task updated successfully!');
+        return redirect()->route(auth()->user()->isTeacher ? 'teacher.tasks' : 'admin.tasks')->with('success', 'Task updated successfully!');
     }
 
     public function destroy(Task $task)
     {
+        // CRITICAL BUG FIX #1: Add authorization check
+        // Only task creator or admin can delete
+        if (auth()->user()->id !== $task->created_by && !auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk menghapus tugas ini.');
+        }
+
         // Delete associated files
         if ($task->image_path) {
             Storage::disk('public')->delete($task->image_path);
         }
 
         // Delete submissions and their files
+        // BUG FIX: Also delete submission records (cascade delete)
         foreach ($task->submissions as $submission) {
-            if ($submission->image_path) {
-                Storage::disk('public')->delete($submission->image_path);
+            if ($submission->file_path) {
+                Storage::disk('public')->delete($submission->file_path);
             }
+            $submission->delete();  // Explicitly delete submission record
         }
 
         $task->delete();
 
-        return redirect()->route('admin.tasks')->with('success', 'Task deleted successfully!');
+        return redirect()->route(auth()->user()->isTeacher ? 'teacher.tasks' : 'admin.tasks')->with('success', 'Task deleted successfully!');
     }
 
     public function updateSubmissionStatus(Task $task, TaskSubmission $submission, Request $request)
     {
+        // CRITICAL BUG FIX #2: Add authorization check
+        // Only task creator or admin can update submission status
+        if (auth()->user()->id !== $task->created_by && !auth()->user()->isAdmin) {
+            abort(403, 'Anda tidak memiliki izin untuk mengubah status pengumpulan ini.');
+        }
+
         $request->validate([
             'status' => 'required|in:pending,approved,rejected',
         ]);
