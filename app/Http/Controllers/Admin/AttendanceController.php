@@ -118,6 +118,82 @@ class AttendanceController extends Controller
         return $pdf->stream();
     }
 
+    public function absentReport(Request $request)
+    {
+        $request->validate([
+            'date' => 'nullable|date_format:Y-m-d',
+            'month' => 'nullable|date_format:Y-m',
+            'week' => 'nullable',
+            'division' => 'nullable|exists:divisions,id',
+            'job_title' => 'nullable|exists:job_titles,id',
+        ]);
+
+        if (!$request->date && !$request->month && !$request->week) {
+            return redirect()->back()->with('error', 'Pilih tanggal, minggu, atau bulan');
+        }
+
+        $carbon = new Carbon;
+        $startDate = null;
+        $endDate = null;
+        $dates = [];
+
+        if ($request->date) {
+            $startDate = $carbon->parse($request->date)->startOfDay();
+            $endDate = $carbon->parse($request->date)->endOfDay();
+            $dates = [$carbon->parse($request->date)->settings(['formatFunction' => 'translatedFormat'])];
+        } else if ($request->week) {
+            $startDate = $carbon->parse($request->week)->startOfWeek();
+            $endDate = $carbon->parse($request->week)->endOfWeek();
+            $dates = $startDate->range($endDate)->toArray();
+        } else if ($request->month) {
+            $startDate = $carbon->parse($request->month)->startOfMonth();
+            $endDate = $carbon->parse($request->month)->endOfMonth();
+            $dates = $startDate->range($endDate)->toArray();
+        }
+
+        // Get all students
+        $allStudents = User::whereIn('group', ['user', 'student'])
+            ->when($request->division, fn (Builder $q) => $q->where('division_id', $request->division))
+            ->when($request->jobTitle, fn (Builder $q) => $q->where('job_title_id', $request->jobTitle))
+            ->with(['division', 'jobTitle', 'education'])
+            ->get();
+
+        // Get students who have attendance in the date range
+        $studentsWithAttendance = Attendance::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->whereHas('user', function ($query) use ($request) {
+                $query->whereIn('group', ['user', 'student'])
+                    ->when($request->division, fn (Builder $q) => $q->where('division_id', $request->division))
+                    ->when($request->jobTitle, fn (Builder $q) => $q->where('job_title_id', $request->jobTitle));
+            })
+            ->pluck('user_id')
+            ->unique();
+
+        // Filter students who don't have attendance (absent students)
+        $absentStudents = $allStudents->filter(function ($student) use ($studentsWithAttendance) {
+            return !$studentsWithAttendance->contains($student->id);
+        });
+
+        // Calculate total days in range
+        $totalDays = $startDate->diffInDays($endDate) + 1;
+
+        $pdf = Pdf::loadView('admin.attendances.absent-report', [
+            'students' => $absentStudents,
+            'dates' => $dates,
+            'date' => $request->date,
+            'month' => $request->month,
+            'week' => $request->week,
+            'division' => $request->division,
+            'jobTitle' => $request->jobTitle,
+            'start' => $startDate,
+            'end' => $endDate,
+            'totalDays' => $totalDays,
+            'totalStudents' => $allStudents->count(),
+            'absentCount' => $absentStudents->count(),
+        ])->setPaper('a4', 'portrait');
+        
+        return $pdf->stream('laporan-siswa-tidak-hadir-' . $startDate->format('Y-m-d') . '.pdf');
+    }
+
     /**
      * Show the form for editing the specified resource.
      */

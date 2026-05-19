@@ -1,4 +1,164 @@
 <div class="w-full bg-white dark:bg-gray-900 rounded-[1.25rem] p-4 md:p-6">
+  <style>
+    /* Smooth scrolling optimization */
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+    
+    body {
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+    
+    /* Reduce repaints during scroll */
+    video, canvas {
+      will-change: transform;
+    }
+
+    /* Loading Screen Styles */
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+
+    #loadingScreen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader-container {
+      text-align: center;
+    }
+
+    .face-loader {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      position: relative;
+    }
+
+    .face-circle {
+      width: 100%;
+      height: 100%;
+      border: 4px solid #e5e7eb;
+      border-top-color: #009ee0;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .face-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+    }
+
+    .loading-text {
+      color: #1f2937;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      animation: fadeInOut 2s ease-in-out infinite;
+    }
+
+    .loading-subtext {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .loading-dot {
+      width: 12px;
+      height: 12px;
+      background: #009ee0;
+      border-radius: 50%;
+      animation: bounce 1.4s ease-in-out infinite;
+    }
+
+    .loading-dot:nth-child(1) { animation-delay: 0s; }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+      40% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .progress-bar-container {
+      width: 300px;
+      height: 4px;
+      background: #e5e7eb;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #009ee0, #48cae4);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+  </style>
+  
+  <!-- Loading Screen -->
+  @if (!$isAbsence)
+  <div id="loadingScreen">
+    <div class="loader-container">
+      <div class="face-loader">
+        <div class="face-circle"></div>
+        <div class="face-icon">🎯</div>
+      </div>
+      <div class="loading-text" id="loadingText">Memuat Sistem Absensi</div>
+      <div class="loading-subtext" id="loadingSubtext">Mohon tunggu sebentar...</div>
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+  </div>
+  @endif
+  
   @php
     use Illuminate\Support\Carbon;
   @endphp
@@ -300,17 +460,50 @@
     let faceApiLoaded = false;
     let detectionInterval = null;
 
+    // Loading Screen Management
+    const loadingScreen = document.getElementById('loadingScreen');
+    const loadingText = document.getElementById('loadingText');
+    const loadingSubtext = document.getElementById('loadingSubtext');
+    const progressBar = document.getElementById('progressBar');
+    
+    const loadingSteps = [
+      { progress: 20, text: 'Mengakses Kamera', subtext: 'Meminta izin akses kamera...' },
+      { progress: 40, text: 'Memuat Model AI', subtext: 'Mengunduh model face recognition...' },
+      { progress: 60, text: 'Mendeteksi Lokasi GPS', subtext: 'Mendapatkan koordinat lokasi...' },
+      { progress: 80, text: 'Mempersiapkan Liveness', subtext: 'Mengaktifkan deteksi liveness...' },
+      { progress: 100, text: 'Siap!', subtext: 'Sistem absensi siap digunakan' }
+    ];
+
+    function updateLoadingProgress(step) {
+      if (loadingScreen && step < loadingSteps.length) {
+        const stepData = loadingSteps[step];
+        if (loadingText) loadingText.textContent = stepData.text;
+        if (loadingSubtext) loadingSubtext.textContent = stepData.subtext;
+        if (progressBar) progressBar.style.width = stepData.progress + '%';
+      }
+    }
+
+    function hideLoadingScreen() {
+      if (loadingScreen) {
+        setTimeout(() => {
+          loadingScreen.classList.add('hidden');
+        }, 500);
+      }
+    }
+
     // Start camera
     async function startCamera() {
       try {
         console.log('Starting camera...');
+        updateLoadingProgress(0); // Step 1: Accessing Camera
         
         // Request camera permission
         const constraints = { 
           video: { 
             facingMode: 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width: { ideal: 640 },  // Reduced for better performance
+            height: { ideal: 480 },
+            frameRate: { ideal: 15, max: 20 }  // Lower frame rate
           } 
         };
         
@@ -367,6 +560,7 @@
     async function loadFaceApi() {
       try {
         console.log('Loading face-api models...');
+        updateLoadingProgress(1); // Step 2: Loading AI Models
         
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
         
@@ -376,13 +570,20 @@
         faceApiLoaded = true;
         console.log('Face-api models loaded successfully!');
         
+        updateLoadingProgress(3); // Step 4: Preparing Liveness
         // Initialize liveness detector
         livenessDetector = new LivenessDetector();
         setupLivenessCallbacks();
         
+        setTimeout(() => {
+          updateLoadingProgress(4); // Step 5: Ready!
+          setTimeout(hideLoadingScreen, 800);
+        }, 500);
+        
       } catch (err) {
         console.error('Failed to load face-api:', err);
         showError('Gagal memuat model AI untuk deteksi wajah.');
+        hideLoadingScreen();
       }
     }
 
@@ -441,12 +642,15 @@
             .withFaceLandmarks(true);
 
           if (detection) {
-            await livenessDetector.process(detection);
+            // Use requestAnimationFrame for smoother processing
+            requestAnimationFrame(async () => {
+              await livenessDetector.process(detection);
+            });
           }
         } catch (err) {
           console.error('Detection error:', err);
         }
-      }, 100); // Check every 100ms
+      }, 200); // Increased to 200ms for better performance
     }
 
     // Stop face detection
@@ -605,6 +809,7 @@
         return;
       }
 
+      updateLoadingProgress(2); // Step 3: Detecting GPS Location
       gpsIcon.textContent = '🔄';
       gpsText.textContent = 'Mencari lokasi...';
 
@@ -783,10 +988,38 @@
       });
     @endif
 
+    // Pause detection during scroll for better performance
+    let scrollTimeout;
+    let isScrolling = false;
+    
+    window.addEventListener('scroll', () => {
+      isScrolling = true;
+      
+      // Temporarily stop detection during scroll
+      if (detectionInterval) {
+        clearInterval(detectionInterval);
+        detectionInterval = null;
+      }
+      
+      // Clear previous timeout
+      clearTimeout(scrollTimeout);
+      
+      // Resume detection after scroll stops
+      scrollTimeout = setTimeout(() => {
+        isScrolling = false;
+        if (faceApiLoaded && !detectionInterval && cameraAvailable && livenessDetector && livenessDetector.isActive) {
+          startLivenessDetection();
+        }
+      }, 150);
+    }, { passive: true });
+
     // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
+      }
+      if (detectionInterval) {
+        clearInterval(detectionInterval);
       }
     });
   </script>

@@ -47,7 +47,29 @@
             background: var(--sidebar-bg) !important;
             box-shadow: 4px 0 10px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
-            z-index: 100;
+            z-index: 1025 !important;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* Custom scrollbar for sidebar */
+        #accordionSidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #accordionSidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #accordionSidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        #accordionSidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .sidebar-dark .nav-item .nav-link {
@@ -117,6 +139,38 @@
             -webkit-backdrop-filter: blur(12px) saturate(180%);
             border-bottom: 1px solid rgba(241, 245, 249, 0.7) !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
+        }
+        
+        /* Topbar positioning - don't overlap sidebar */
+        .topbar {
+            left: 224px !important; /* Sidebar width */
+            transition: left 0.3s ease;
+        }
+        
+        /* Content wrapper - don't overlap sidebar */
+        #content-wrapper {
+            margin-left: 224px; /* Sidebar width */
+            transition: margin-left 0.3s ease;
+        }
+        
+        /* When sidebar is toggled (collapsed) */
+        .sidebar-toggled .topbar {
+            left: 0 !important;
+        }
+        
+        .sidebar-toggled #content-wrapper {
+            margin-left: 0;
+        }
+        
+        /* Mobile - topbar full width, content no margin */
+        @media (max-width: 768px) {
+            .topbar {
+                left: 0 !important;
+            }
+            
+            #content-wrapper {
+                margin-left: 0 !important;
+            }
         }
 
         .search-container {
@@ -315,14 +369,14 @@
         <div id="content-wrapper" class="d-flex flex-column">
 
             <!-- Main Content -->
-            <div id="content">
+            <div id="content" style="padding-top: 70px;">
 
                 <!-- Topbar -->
                 @include('layouts.partials.admin-topbar')
                 <!-- End of Topbar -->
 
                 <!-- Begin Page Content -->
-                <div class="container-fluid py-4">
+                <div class="container-fluid py-4"> 
 
                     <!-- Page Heading -->
                     @if (isset($header))

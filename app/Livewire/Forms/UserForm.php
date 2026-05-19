@@ -127,18 +127,68 @@ class UserForm extends Form
     public function delete()
     {
         if (!$this->isAllowed()) {
-            return abort(403);
+            \Log::warning('Delete user forbidden', [
+                'current_user_id' => Auth::id(),
+                'current_user_group' => Auth::user()?->group,
+                'target_user_id' => $this->user?->id,
+                'target_user_group' => $this->group,
+            ]);
+            throw new \Illuminate\Auth\Access\AuthorizationException('Anda tidak memiliki izin untuk menghapus user ini.');
         }
-        $this->user->delete();
-        $this->deleteProfilePhoto();
-        $this->reset();
+        
+        try {
+            // Delete profile photo first
+            if ($this->user->profile_photo_path) {
+                $this->user->deleteProfilePhoto();
+            }
+            
+            // Delete face registration photos if exists
+            $faceRegistrations = \App\Models\FaceRegistration::where('user_id', $this->user->id)->get();
+            foreach ($faceRegistrations as $registration) {
+                if ($registration->photo_path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($registration->photo_path);
+                }
+            }
+            
+            // Delete the user (cascade will handle related records)
+            $this->user->delete();
+            
+            \Log::info('User deleted successfully', [
+                'deleted_user_id' => $this->user->id,
+                'deleted_user_name' => $this->user->name,
+                'deleted_by' => Auth::id(),
+            ]);
+            
+            $this->reset();
+        } catch (\Exception $e) {
+            \Log::error('Delete user failed', [
+                'user_id' => $this->user?->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 
     private function isAllowed()
     {
-        if ($this->group === 'user') {
-            return Auth::user()?->isAdmin;
+        $currentUser = Auth::user();
+        
+        // Superadmin bisa manage semua
+        if ($currentUser?->isSuperadmin) {
+            return true;
         }
-        return Auth::user()?->isSuperadmin || (Auth::user()?->isAdmin && Auth::user()?->id === $this->user?->id);
+        
+        // Admin bisa manage user biasa dan siswa, tapi tidak bisa manage admin lain
+        if ($currentUser?->isAdmin) {
+            // Jika target adalah admin/superadmin, hanya bisa edit diri sendiri
+            if (in_array($this->group, ['admin', 'superadmin'])) {
+                return $currentUser->id === $this->user?->id;
+            }
+            // Bisa manage user biasa, teacher, dan student
+            return in_array($this->group, ['user', 'teacher', 'student']);
+        }
+        
+        return false;
     }
 }

@@ -1,9 +1,169 @@
 <x-app-layout>
+    <style>
+        /* Smooth scrolling optimization */
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        /* Reduce repaints during scroll */
+        video, canvas {
+            will-change: transform;
+        }
+
+        /* Loading Screen Styles */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+
+        #loadingScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-container {
+            text-align: center;
+        }
+
+        .face-loader {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .face-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #e5e7eb;
+            border-top-color: #009ee0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .face-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+        }
+
+        .loading-text {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        .loading-subtext {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .loading-dot {
+            width: 12px;
+            height: 12px;
+            background: #009ee0;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .progress-bar-container {
+            width: 300px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #009ee0, #48cae4);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+    
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Registrasi Wajah') }}
         </h2>
     </x-slot>
+
+    <!-- Loading Screen -->
+    @if (!$registration)
+    <div id="loadingScreen">
+        <div class="loader-container">
+            <div class="face-loader">
+                <div class="face-circle"></div>
+                <div class="face-icon">📸</div>
+            </div>
+            <div class="loading-text" id="loadingText">Mempersiapkan Registrasi Wajah</div>
+            <div class="loading-subtext" id="loadingSubtext">Mohon tunggu sebentar...</div>
+            <div class="loading-dots">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -76,9 +236,9 @@
                                 </p>
                             </div>
                     
-                            <!-- Camera Preview -->
+                            <!-- Camera Preview - Square 1:1 -->
                             <div class="mb-6">
-                                <div class="relative bg-gray-900 rounded-lg overflow-hidden" style="aspect-ratio: 4/3;">
+                                <div class="relative bg-gray-900 rounded-lg overflow-hidden mx-auto" style="max-width: 500px; aspect-ratio: 1/1;">
                                     <video id="camera" autoplay playsinline class="w-full h-full object-cover"></video>
                                     <canvas id="canvas" class="hidden"></canvas>
                                     <canvas id="overlay" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
@@ -97,7 +257,7 @@
                                         </svg>
                                         <h3 class="text-white font-bold text-lg mb-2">Kamera Tidak Dapat Diakses</h3>
                                         <p class="text-gray-300 text-sm mb-4">
-                                            Untuk menggunakan kamera, aplikasi harus diakses melalui HTTPS.<br>
+                                            Untuk menggunakan kamera,  aplikasi harus diakses melalui HTTPS.<br>
                                             Saat ini Anda mengakses melalui HTTP.
                                         </p>
                                         <div class="bg-blue-900/50 rounded-lg p-4 mb-4 text-left text-sm text-gray-200">
@@ -115,10 +275,54 @@
                                 </div>
                             </div>
 
+                            <!-- Form -->
+                            <form id="registrationForm" action="{{ route('face-registration.store') }}" method="POST" enctype="multipart/form-data">
+                                @csrf
+                                <input type="file" name="photo" id="photoInput" accept="image/*" class="hidden">
+                                <input type="hidden" name="descriptor" id="descriptorInput">
+                                
+                                <!-- Buttons Below Canvas -->
+                                <div class="flex gap-3 max-w-md mx-auto mb-6">
+                                    <button type="button" 
+                                            id="captureBtn"
+                                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl">
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            Ambil Foto
+                                        </span>
+                                    </button>
+                                    
+                                    <button type="button" 
+                                            id="retakeBtn"
+                                            class="hidden flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl">
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                            Ambil Ulang
+                                        </span>
+                                    </button>
+                                    
+                                    <button type="submit" 
+                                            id="submitBtn"
+                                            class="hidden flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl">
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Daftarkan Wajah
+                                        </span>
+                                    </button>
+                                </div>
+                            </form>
+
                             <!-- Instructions -->
-                            <div class="mb-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                            <div class="mt-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
                                 <h4 class="font-bold text-blue-900 dark:text-blue-100 mb-2">Panduan:</h4>
-                                <ul class="list-disc list-inside text-blue-800 dark:text-blue-200 space-y-1">
+                                <ul class="list-disc list-inside text-blue-800 dark:text-blue-200 space-y-1 text-sm">
                                     <li>Pastikan wajah Anda berada di tengah frame</li>
                                     <li>Hindari menggunakan kacamata hitam atau masker</li>
                                     <li>Pastikan pencahayaan cukup terang</li>
@@ -134,33 +338,6 @@
                                     </p>
                                 </div>
                             </div>
-
-                            <!-- Form -->
-                            <form id="registrationForm" action="{{ route('face-registration.store') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-                                <input type="file" name="photo" id="photoInput" accept="image/*" class="hidden">
-                                <input type="hidden" name="descriptor" id="descriptorInput">
-                                
-                                <div class="flex gap-3">
-                                    <button type="button" 
-                                            id="captureBtn"
-                                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                                        📸 Ambil Foto
-                                    </button>
-                                    
-                                    <button type="button" 
-                                            id="retakeBtn"
-                                            class="hidden flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg">
-                                        🔄 Ambil Ulang
-                                    </button>
-                                    
-                                    <button type="submit" 
-                                            id="submitBtn"
-                                            class="hidden flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
-                                        ✓ Daftarkan Wajah
-                                    </button>
-                                </div>
-                            </form>
                         </div>
                     @endif
                 </div>
@@ -196,11 +373,42 @@
         let detectionInterval = null;
         let faceDetected = false;
 
+        // Loading Screen Management
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingText = document.getElementById('loadingText');
+        const loadingSubtext = document.getElementById('loadingSubtext');
+        const progressBar = document.getElementById('progressBar');
+        
+        const loadingSteps = [
+            { progress: 25, text: 'Mengakses Kamera', subtext: 'Meminta izin akses kamera...' },
+            { progress: 50, text: 'Memuat Model AI', subtext: 'Mengunduh model face recognition...' },
+            { progress: 75, text: 'Mempersiapkan Deteksi', subtext: 'Mengaktifkan sistem deteksi wajah...' },
+            { progress: 100, text: 'Siap!', subtext: 'Sistem registrasi wajah siap digunakan' }
+        ];
+
+        function updateLoadingProgress(step) {
+            if (loadingScreen && step < loadingSteps.length) {
+                const stepData = loadingSteps[step];
+                if (loadingText) loadingText.textContent = stepData.text;
+                if (loadingSubtext) loadingSubtext.textContent = stepData.subtext;
+                if (progressBar) progressBar.style.width = stepData.progress + '%';
+            }
+        }
+
+        function hideLoadingScreen() {
+            if (loadingScreen) {
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                }, 500);
+            }
+        }
+
         // Load face-api models
         async function loadFaceApi() {
             try {
                 console.log('Loading face-api models...');
                 faceStatusText.textContent = 'Memuat model AI...';
+                updateLoadingProgress(1); // Step 2: Loading AI Models
                 
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
                 
@@ -211,11 +419,18 @@
                 faceApiLoaded = true;
                 console.log('Face-api models loaded successfully!');
                 faceStatusText.textContent = 'Mencari wajah...';
+                updateLoadingProgress(2); // Step 3: Preparing Detection
                 startFaceDetection();
+                
+                setTimeout(() => {
+                    updateLoadingProgress(3); // Step 4: Ready!
+                    setTimeout(hideLoadingScreen, 800);
+                }, 500);
             } catch (err) {
                 console.error('Failed to load face-api:', err);
                 faceStatusText.textContent = 'Gagal memuat model AI';
                 faceStatus.className = 'absolute top-4 left-4 bg-red-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
+                hideLoadingScreen();
             }
         }
 
@@ -228,12 +443,14 @@
                     .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks(true);
 
-                // Set canvas size FIRST, then clear
-                overlay.width = video.videoWidth;
-                overlay.height = video.videoHeight;
-                
-                const ctx = overlay.getContext('2d');
-                ctx.clearRect(0, 0, overlay.width, overlay.height);
+                // Use requestAnimationFrame for smoother rendering
+                requestAnimationFrame(() => {
+                    // Set canvas size FIRST, then clear
+                    overlay.width = video.videoWidth;
+                    overlay.height = video.videoHeight;
+                    
+                    const ctx = overlay.getContext('2d');
+                    ctx.clearRect(0, 0, overlay.width, overlay.height);
                 
                 if (!detection) {
                     // No face detected
@@ -255,6 +472,7 @@
                     // Draw face box
                     drawFaceBox(ctx, detection.detection.box);
                 }
+                });
             } catch (err) {
                 console.error('Face detection error:', err);
             }
@@ -305,7 +523,7 @@
         // Start continuous face detection
         function startFaceDetection() {
             if (detectionInterval) clearInterval(detectionInterval);
-            detectionInterval = setInterval(detectFaces, 200);
+            detectionInterval = setInterval(detectFaces, 800); // Increased to 800ms for smoother scrolling
         }
 
         // Stop face detection
@@ -338,6 +556,7 @@
         // Start camera
         async function startCamera() {
             try {
+                updateLoadingProgress(0); // Step 1: Accessing Camera
                 const isSecure = window.location.protocol === 'https:' || 
                                 window.location.hostname === 'localhost' || 
                                 window.location.hostname === '127.0.0.1';
@@ -349,8 +568,9 @@
                 stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: 'user',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        width: { ideal: 640 },  // Reduced for better performance
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 15, max: 20 }  // Lower frame rate
                     } 
                 });
                 video.srcObject = stream;
@@ -368,6 +588,7 @@
                     cameraError.classList.remove('hidden');
                     faceStatus.classList.add('hidden');
                 }
+                hideLoadingScreen();
             }
         }
 
@@ -481,6 +702,41 @@
         @if (!$registration)
             startCamera();
         @endif
+
+        // Pause detection during scroll for better performance
+        let scrollTimeout;
+        let isScrolling = false;
+        
+        window.addEventListener('scroll', () => {
+            isScrolling = true;
+            
+            // Temporarily stop detection during scroll
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+            
+            // Clear previous timeout
+            clearTimeout(scrollTimeout);
+            
+            // Resume detection after scroll stops
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                if (faceApiLoaded && !detectionInterval && cameraAvailable) {
+                    startFaceDetection();
+                }
+            }, 150);
+        }, { passive: true });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+            }
+        });
     </script>
     @endpush
 </x-app-layout>

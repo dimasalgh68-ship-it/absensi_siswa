@@ -7,12 +7,30 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="{{ config('app.name') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ config('app.name') }}">
+    <meta name="description" content="Aplikasi absensi siswa dengan face recognition dan GPS tracking">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('pwa-icons/icon-192x192.png') }}">
+    <link rel="mask-icon" href="{{ asset('favicon.png') }}" color="#4f46e5">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -25,10 +43,12 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
+            padding-top: 64px; /* Height of navbar (h-16 = 64px) */
             overflow-x: hidden;
             max-width: 100vw;
         }
         html {
+            scroll-behavior: smooth;
             overflow-x: hidden;
             max-width: 100vw;
         }
@@ -38,6 +58,7 @@
         .app-gradient {
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         .header-glass {
             background: rgba(255, 255, 255, 0.7);
@@ -60,15 +81,15 @@
     </style>
 </head>
 
-<body class="font-sans antialiased text-slate-900 overflow-x-hidden">
+<body class="font-sans antialiased text-slate-900" style="overflow-x: hidden; max-width: 100vw;">
     <x-banner />
 
-    <div class="app-gradient relative overflow-x-hidden">
+    <div class="app-gradient relative" style="overflow-x: hidden;">
         <!-- Abstract Background Shapes -->
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-blue-400 opacity-10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-indigo-400 opacity-10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <nav class="sticky top-0 z-50">
+        <nav>
             @livewire('navigation-menu')
         </nav>
 
@@ -107,6 +128,127 @@
         });
     </script>
     @stack('scripts')
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available
+                                    if (confirm('Update tersedia! Reload untuk mendapatkan versi terbaru?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installButton = document.getElementById('pwa-install-btn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('💡 PWA install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button if exists
+            if (installButton) {
+                installButton.style.display = 'block';
+            } else {
+                // Show custom install banner
+                showInstallBanner();
+            }
+        });
+        
+        function showInstallBanner() {
+            // Create install banner
+            const banner = document.createElement('div');
+            banner.id = 'pwa-install-banner';
+            banner.innerHTML = `
+                <div style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; max-width: 90%; width: 400px;">
+                    <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 10px 40px rgba(79, 70, 229, 0.4); display: flex; align-items: center; gap: 12px;">
+                        <div style="flex-shrink: 0; font-size: 32px;">📱</div>
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Install Aplikasi</div>
+                            <div style="font-size: 12px; opacity: 0.9;">Akses lebih cepat dari home screen</div>
+                        </div>
+                        <button onclick="installPWA()" style="background: white; color: #4f46e5; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; flex-shrink: 0;">
+                            Install
+                        </button>
+                        <button onclick="dismissInstallBanner()" style="background: transparent; color: white; border: none; padding: 8px; cursor: pointer; font-size: 20px; line-height: 1; flex-shrink: 0;">
+                            ×
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(banner);
+            
+            // Auto dismiss after 10 seconds
+            setTimeout(() => {
+                dismissInstallBanner();
+            }, 10000);
+        }
+        
+        window.installPWA = async function() {
+            if (!deferredPrompt) {
+                console.log('❌ Install prompt not available');
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            console.log(`👤 User response: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                console.log('✅ PWA installed');
+            }
+            
+            deferredPrompt = null;
+            dismissInstallBanner();
+        };
+        
+        window.dismissInstallBanner = function() {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.remove();
+            }
+        };
+        
+        // Detect if app is running as PWA
+        window.addEventListener('load', () => {
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                console.log('🚀 Running as PWA');
+                document.body.classList.add('pwa-mode');
+            }
+        });
+        
+        // Online/Offline detection
+        window.addEventListener('online', () => {
+            console.log('🌐 Back online');
+            // You can show a toast notification here
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('📡 Gone offline');
+            // You can show a toast notification here
+        });
+    </script>
     
     @auth
         @if(!Auth::user()->isAdmin)

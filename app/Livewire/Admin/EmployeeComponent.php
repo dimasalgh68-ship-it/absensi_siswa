@@ -81,10 +81,36 @@ class EmployeeComponent extends Component
 
     public function delete()
     {
-        $user = User::find($this->selectedId);
-        $this->form->setUser($user)->delete();
-        $this->confirmingDeletion = false;
-        $this->banner(__('Deleted successfully.'));
+        try {
+            $user = User::find($this->selectedId);
+            
+            if (!$user) {
+                $this->confirmingDeletion = false;
+                $this->banner('Siswa tidak ditemukan.', 'danger');
+                return;
+            }
+            
+            $userName = $user->name;
+            $this->form->setUser($user)->delete();
+            
+            $this->confirmingDeletion = false;
+            $this->selectedId = null;
+            $this->deleteName = null;
+            
+            $this->banner("Siswa {$userName} berhasil dihapus.");
+            
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->confirmingDeletion = false;
+            $this->banner('Anda tidak memiliki izin untuk menghapus siswa ini.', 'danger');
+            
+        } catch (\Exception $e) {
+            $this->confirmingDeletion = false;
+            \Log::error('Delete user error: ' . $e->getMessage(), [
+                'user_id' => $this->selectedId,
+                'exception' => $e,
+            ]);
+            $this->banner('Terjadi kesalahan saat menghapus siswa. Silakan coba lagi.', 'danger');
+        }
     }
 
     public function render()

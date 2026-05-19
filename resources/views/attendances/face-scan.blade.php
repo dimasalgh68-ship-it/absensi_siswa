@@ -1,9 +1,173 @@
 <x-app-layout>
+    <style>
+        /* Smooth scrolling optimization */
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        /* Reduce repaints during scroll */
+        video, canvas {
+            will-change: transform;
+        }
+
+        /* Loading Screen Styles */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+
+        #loadingScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-container {
+            text-align: center;
+        }
+
+        .face-loader {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+
+        .face-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #e5e7eb;
+            border-top-color: #009ee0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .face-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+        }
+
+        .loading-text {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        .loading-subtext {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .loading-dot {
+            width: 12px;
+            height: 12px;
+            background: #009ee0;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .progress-bar-container {
+            width: 300px;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #009ee0, #48cae4);
+            border-radius: 2px;
+            width: 0%;
+            animation: progress 3s ease-in-out forwards;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+    </style>
+    
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Absensi Face Recognition') }}
         </h2>
     </x-slot>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loader-container">
+            <div class="face-loader">
+                <div class="face-circle"></div>
+                <div class="face-icon">👤</div>
+            </div>
+            <div class="loading-text" id="loadingText">Memuat Sistem Face Recognition</div>
+            <div class="loading-subtext" id="loadingSubtext">Mohon tunggu sebentar...</div>
+            <div class="loading-dots">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
 
     @php
         $faceThreshold = \App\Models\Setting::get('face_similarity_threshold', 70);
@@ -415,6 +579,9 @@
     </div>
 
     @push('scripts')
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Face Recognition Library -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7"></script>
@@ -451,11 +618,49 @@
         let hasSpokenFaceDetected = false; // Track if we've spoken about face detection
         let soundEnabled = true; // Sound is enabled by default
 
+        // Loading Screen Management
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingText = document.getElementById('loadingText');
+        const loadingSubtext = document.getElementById('loadingSubtext');
+        const progressBar = document.getElementById('progressBar');
+        
+        let loadingProgress = 0;
+        const loadingSteps = [
+            { progress: 20, text: 'Mengakses Kamera', subtext: 'Meminta izin akses kamera...' },
+            { progress: 40, text: 'Memuat Model AI', subtext: 'Mengunduh model face recognition...' },
+            { progress: 60, text: 'Mendeteksi Lokasi GPS', subtext: 'Mendapatkan koordinat lokasi...' },
+            { progress: 80, text: 'Memuat Data Wajah', subtext: 'Mengambil data registrasi wajah...' },
+            { progress: 100, text: 'Siap!', subtext: 'Sistem face recognition siap digunakan' }
+        ];
+        
+        let currentStepIndex = 0;
+
+        function updateLoadingProgress(step) {
+            if (step < loadingSteps.length) {
+                const stepData = loadingSteps[step];
+                loadingText.textContent = stepData.text;
+                loadingSubtext.textContent = stepData.subtext;
+                progressBar.style.width = stepData.progress + '%';
+                currentStepIndex = step;
+            }
+        }
+
+        function hideLoadingScreen() {
+            // Ensure progress is at 100%
+            if (currentStepIndex < 4) {
+                updateLoadingProgress(4);
+            }
+            
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+            }, 500);
+        }
+
         // Load face-api models
         async function loadFaceApi() {
             try {
                 console.log('Loading face-api models...');
-                faceStatusText.textContent = 'Memuat model AI...';
+                updateLoadingProgress(1); // Step 2: Loading AI Models
                 
                 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
                 
@@ -466,35 +671,80 @@
                 faceApiLoaded = true;
                 console.log('Face-api models loaded!');
                 
+                updateLoadingProgress(2); // Step 3: GPS (skip for now)
+                
                 // Load registered face descriptor
                 await loadRegisteredFace();
                 
-                // Start detection
-                startFaceDetection();
+                // Start detection only if descriptor loaded
+                if (registeredDescriptor) {
+                    startFaceDetection();
+                }
             } catch (err) {
                 console.error('Failed to load face-api:', err);
-                faceStatusIcon.textContent = '❌';
-                faceStatusText.textContent = 'Gagal memuat model';
+                updateLoadingProgress(4); // Complete progress
+                setTimeout(() => {
+                    hideLoadingScreen();
+                    setTimeout(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Memuat Model AI',
+                            text: 'Terjadi kesalahan saat memuat model face recognition: ' + err.message,
+                            confirmButtonText: 'Kembali',
+                            confirmButtonColor: '#6b7280',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            window.history.back();
+                        });
+                    }, 300);
+                }, 800);
             }
         }
 
         // Load registered face from server
         async function loadRegisteredFace() {
             try {
+                updateLoadingProgress(3); // Step 4: Loading Face Data
+                
                 const response = await fetch('/api/face-registration/descriptor');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                
+                console.log('Loading face descriptor...'); // Debug log
                 
                 if (data.success && data.descriptor) {
                     registeredDescriptor = new Float32Array(data.descriptor);
-                    console.log('Registered face loaded');
-                    faceStatusText.textContent = 'Mencari wajah...';
+                    console.log('Registered face loaded successfully');
+                    updateLoadingProgress(4); // Step 5: Ready!
+                    setTimeout(hideLoadingScreen, 800);
                 } else {
-                    console.warn('No registered face found');
-                    faceStatusIcon.textContent = '⚠️';
-                    faceStatusText.textContent = 'Wajah belum terdaftar';
+                    // This shouldn't happen since we checked in initialize()
+                    throw new Error('Face descriptor not found');
                 }
             } catch (err) {
                 console.error('Failed to load registered face:', err);
+                updateLoadingProgress(4);
+                
+                setTimeout(() => {
+                    hideLoadingScreen();
+                    
+                    setTimeout(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Memuat Data',
+                            text: 'Terjadi kesalahan saat memuat data wajah: ' + err.message,
+                            confirmButtonText: 'Kembali',
+                            confirmButtonColor: '#6b7280',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            window.history.back();
+                        });
+                    }, 300);
+                }, 800);
             }
         }
 
@@ -507,16 +757,18 @@
                     .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks(true);
 
-                // Draw on overlay canvas
-                const ctx = overlay.getContext('2d');
-                
-                // Only resize canvas if dimensions changed
-                if (overlay.width !== video.videoWidth || overlay.height !== video.videoHeight) {
-                    overlay.width = video.videoWidth;
-                    overlay.height = video.videoHeight;
-                }
-                
-                ctx.clearRect(0, 0, overlay.width, overlay.height);
+                // Use requestAnimationFrame for smoother rendering
+                requestAnimationFrame(() => {
+                    // Draw on overlay canvas
+                    const ctx = overlay.getContext('2d');
+                    
+                    // Only resize canvas if dimensions changed
+                    if (overlay.width !== video.videoWidth || overlay.height !== video.videoHeight) {
+                        overlay.width = video.videoWidth;
+                        overlay.height = video.videoHeight;
+                    }
+                    
+                    ctx.clearRect(0, 0, overlay.width, overlay.height);
                 
                 if (!detection) {
                     // No face detected
@@ -537,9 +789,10 @@
                         faceStatus.className = 'absolute top-4 left-4 bg-green-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
                     }
                     
-                    // Draw face box
-                    drawFaceBox(ctx, detection.detection.box);
-                }
+                        // Draw face box
+                        drawFaceBox(ctx, detection.detection.box);
+                    }
+                });
             } catch (err) {
                 console.error('Face detection error:', err);
             }
@@ -594,7 +847,7 @@
         // Start continuous face detection
         function startFaceDetection() {
             if (detectionInterval) clearInterval(detectionInterval);
-            detectionInterval = setInterval(detectFaces, 500); // Increased to 500ms for smoother performance
+            detectionInterval = setInterval(detectFaces, 1000); // Increased to 1000ms for smoother scrolling
         }
 
         // Stop face detection
@@ -607,8 +860,34 @@
 
         // Detect and verify face
         async function detectAndVerifyFace() {
-            if (!faceApiLoaded || !registeredDescriptor) {
+            if (!faceApiLoaded) {
                 showError('Face recognition belum siap');
+                return null;
+            }
+
+            if (!registeredDescriptor) {
+                showError('Wajah belum terdaftar. Silakan daftarkan wajah Anda terlebih dahulu.');
+                
+                // Show redirect dialog
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Wajah Belum Terdaftar',
+                        text: 'Silakan daftarkan wajah Anda terlebih dahulu untuk dapat melakukan absensi.',
+                        showCancelButton: true,
+                        confirmButtonText: 'Daftar Wajah',
+                        cancelButtonText: 'Kembali',
+                        confirmButtonColor: '#3b82f6',
+                        cancelButtonColor: '#6b7280'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/face-registration';
+                        } else {
+                            window.history.back();
+                        }
+                    });
+                }, 500);
+                
                 return null;
             }
 
@@ -620,7 +899,7 @@
                     .withFaceDescriptor();
 
                 if (!detection) {
-                    showError('tidak terdeteksi. Pastikan wajah Anda terlihat jelas.');
+                    showError(' tidak terdeteksi. Pastikan wajah Anda terlihat jelas.');
                     return null;
                 }
 
@@ -661,12 +940,13 @@
         // Start camera
         async function startCamera() {
             try {
+                updateLoadingProgress(0); // Step 1: Accessing Camera
                 stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: 'user',
-                        width: { ideal: 640 },  // Optimal resolution for face detection
-                        height: { ideal: 480 },
-                        frameRate: { ideal: 24, max: 30 }  // Limit frame rate for better performance
+                        width: { ideal: 480 },  // Reduced resolution for better performance
+                        height: { ideal: 360 },
+                        frameRate: { ideal: 15, max: 20 }  // Lower frame rate for smoother scrolling
                     } 
                 });
                 video.srcObject = stream;
@@ -677,6 +957,7 @@
                 };
             } catch (err) {
                 showError('Tidak dapat mengakses kamera: ' + err.message);
+                hideLoadingScreen();
             }
         }
 
@@ -687,6 +968,7 @@
                 return;
             }
 
+            updateLoadingProgress(2); // Step 3: Detecting GPS Location
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     currentPosition = {
@@ -948,11 +1230,109 @@
         clockInBtn.addEventListener('click', () => submitAttendance('clock_in'));
         clockOutBtn.addEventListener('click', () => submitAttendance('clock_out'));
 
-        // Initialize
-        @if ($hasFaceRegistration)
-            startCamera();
-            getLocation();
-        @endif
+        // Initialize - Always start, check registration inside
+        async function initialize() {
+            try {
+                // Step 1: Check face registration first
+                updateLoadingProgress(0);
+                
+                const checkResponse = await fetch('/api/face-registration/descriptor');
+                const checkData = await checkResponse.json();
+                
+                if (!checkData.success || !checkData.descriptor) {
+                    // No face registration - show alert and stop
+                    updateLoadingProgress(4); // Complete progress
+                    
+                    setTimeout(() => {
+                        hideLoadingScreen();
+                        
+                        setTimeout(() => {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Wajah Belum Terdaftar',
+                                html: `
+                                    <p class="text-gray-600 mb-4">
+                                        Anda belum mendaftarkan wajah untuk sistem absensi face recognition.
+                                    </p>
+                                    <p class="text-gray-600 mb-4">
+                                        Silakan daftarkan wajah Anda terlebih dahulu untuk dapat melakukan absensi dengan face recognition.
+                                    </p>
+                                `,
+                                showCancelButton: true,
+                                confirmButtonText: '<i class="fas fa-user-plus mr-2"></i>Daftar Wajah Sekarang',
+                                cancelButtonText: '<i class="fas fa-arrow-left mr-2"></i>Kembali',
+                                confirmButtonColor: '#3b82f6',
+                                cancelButtonColor: '#6b7280',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '/face-registration';
+                                } else {
+                                    window.history.back();
+                                }
+                            });
+                        }, 300);
+                    }, 800);
+                    
+                    return; // Stop initialization
+                }
+                
+                // Has registration - continue with normal flow
+                console.log('Face registration found, continuing...');
+                startCamera();
+                getLocation();
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                updateLoadingProgress(4);
+                
+                setTimeout(() => {
+                    hideLoadingScreen();
+                    
+                    setTimeout(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Memuat',
+                            text: 'Terjadi kesalahan: ' + error.message,
+                            confirmButtonText: 'Kembali',
+                            confirmButtonColor: '#6b7280',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            window.history.back();
+                        });
+                    }, 300);
+                }, 800);
+            }
+        }
+        
+        // Start initialization
+        initialize();
+
+        // Pause detection during scroll for better performance
+        let scrollTimeout;
+        let isScrolling = false;
+        
+        window.addEventListener('scroll', () => {
+            isScrolling = true;
+            
+            // Temporarily stop detection during scroll
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+                detectionInterval = null;
+            }
+            
+            // Clear previous timeout
+            clearTimeout(scrollTimeout);
+            
+            // Resume detection after scroll stops
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                if (faceApiLoaded && !detectionInterval) {
+                    startFaceDetection();
+                }
+            }, 150);
+        }, { passive: true });
 
         // Cleanup on page unload - IMPORTANT: Stop all audio/speech
         window.addEventListener('beforeunload', () => {

@@ -1,4 +1,4 @@
- <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top sticky-top header-glass border-0" style="z-index: 1030;">
+ <nav class="navbar navbar-expand navbar-light topbar mb-4 fixed-top header-glass border-0" style="z-index: 1020; left: 0; right: 0;">
 
     <!-- Sidebar Toggle (Topbar) -->
     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-2 hover-scale">
@@ -153,7 +153,7 @@
                 
                 <!-- Menu Items -->
                 <div class="dropdown-items">
-                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('profile.show') }}">
+                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.profile') }}">
                         <div class="item-icon-container mr-3 bg-blue-50 text-blue-600 rounded-lg">
                             <i class="fas fa-user-circle fa-sm"></i>
                         </div>
@@ -205,10 +205,6 @@
 
 <style>
     /* Stability Fixes for Dropdowns */
-    .dropdown-menu-custom {
-        display: none;
-    }
-    
     [x-cloak] { 
         display: none !important; 
     }

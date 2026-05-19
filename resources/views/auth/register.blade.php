@@ -44,7 +44,7 @@
             <!-- Name -->
             <div class="group">
               <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-[2px] ml-1 mb-2 group-focus-within:text-blue-500 transition-colors">Nama Lengkap</label>
-              <input id="name" type="text" name="name" :value="old('name')" required autofocus autocomplete="name"
+              <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
                 placeholder="Nama Anda"
                 class="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-800 px-5 py-3.5 rounded-2xl text-base outline-none focus:border-blue-500/30 focus:bg-white dark:focus:bg-gray-900 transition-all duration-300 text-gray-700 dark:text-white placeholder:text-gray-300 shadow-sm" />
             </div>
@@ -52,7 +52,7 @@
             <!-- NISN -->
             <div class="group">
               <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-[2px] ml-1 mb-2 group-focus-within:text-blue-500 transition-colors">NISN</label>
-              <input id="nisn" type="text" name="nisn" :value="old('nisn')" autocomplete="nisn" required
+              <input id="nisn" type="text" name="nisn" value="{{ old('nisn') }}" autocomplete="nisn" required
                 placeholder="Nomor Induk Siswa"
                 class="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-800 px-5 py-3.5 rounded-2xl text-base outline-none focus:border-blue-500/30 focus:bg-white dark:focus:bg-gray-900 transition-all duration-300 text-gray-700 dark:text-white placeholder:text-gray-300 shadow-sm" />
             </div>
@@ -60,7 +60,7 @@
             <!-- Email -->
             <div class="group">
               <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-[2px] ml-1 mb-2 group-focus-within:text-blue-500 transition-colors">Email</label>
-              <input id="email" type="email" name="email" :value="old('email')" required
+              <input id="email" type="email" name="email" value="{{ old('email') }}" required
                 placeholder="email@sekolah.com"
                 class="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-800 px-5 py-3.5 rounded-2xl text-base outline-none focus:border-blue-500/30 focus:bg-white dark:focus:bg-gray-900 transition-all duration-300 text-gray-700 dark:text-white placeholder:text-gray-300 shadow-sm" />
             </div>
@@ -68,7 +68,7 @@
             <!-- Phone -->
             <div class="group">
               <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-[2px] ml-1 mb-2 group-focus-within:text-blue-500 transition-colors">No. Telepon</label>
-              <input id="phone" type="text" name="phone" :value="old('phone')" required
+              <input id="phone" type="text" name="phone" value="{{ old('phone') }}" required
                 placeholder="08xxxxxxxxxx"
                 class="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-800 px-5 py-3.5 rounded-2xl text-base outline-none focus:border-blue-500/30 focus:bg-white dark:focus:bg-gray-900 transition-all duration-300 text-gray-700 dark:text-white placeholder:text-gray-300 shadow-sm" />
             </div>
@@ -101,7 +101,7 @@
             <!-- City -->
             <div class="group">
               <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-[2px] ml-1 mb-2 group-focus-within:text-blue-500 transition-colors">Kota</label>
-              <input id="city" type="text" name="city" :value="old('city')" required
+              <input id="city" type="text" name="city" value="{{ old('city') }}" required
                 placeholder="Contoh: Jakarta"
                 class="w-full bg-gray-50 dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-800 px-5 py-3.5 rounded-2xl text-base outline-none focus:border-blue-500/30 focus:bg-white dark:focus:bg-gray-900 transition-all duration-300 text-gray-700 dark:text-white placeholder:text-gray-300 shadow-sm" />
             </div>
