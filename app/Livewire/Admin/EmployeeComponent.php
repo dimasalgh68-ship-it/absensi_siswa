@@ -116,6 +116,7 @@ class EmployeeComponent extends Component
             ]);
             $this->banner('Terjadi kesalahan saat menghapus siswa. Silakan coba lagi.', 'danger');
         }
+<<<<<<< HEAD
     }
 
     public function toggleSelectAll($checked)
@@ -170,6 +171,8 @@ class EmployeeComponent extends Component
             \Log::error('Bulk delete error: ' . $e->getMessage());
             $this->banner('Terjadi kesalahan saat menghapus siswa. Silakan coba lagi.', 'danger');
         }
+=======
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
     }
 
     public function render()

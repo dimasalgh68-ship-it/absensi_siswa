@@ -152,6 +152,7 @@
 
         .signature-section {
             margin-top: 40px;
+<<<<<<< HEAD
             display: table;
             width: 100%;
             table-layout: fixed;
@@ -163,6 +164,15 @@
             width: 50%;
             vertical-align: top;
             padding: 0 20px;
+=======
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            text-align: center;
+            width: 45%;
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
         }
 
         .signature-line {
@@ -281,6 +291,7 @@
 
         <div class="signature-section">
             <div class="signature-box">
+<<<<<<< HEAD
                 <p style="margin-bottom: 5px;">Mengetahui,</p>
                 <p style="font-weight: bold; margin-bottom: 60px;">Kepala Sekolah</p>
                 <div class="signature-line">
@@ -294,6 +305,19 @@
                 <div class="signature-line">
                     <p style="font-weight: bold;">(...........................)</p>
                     <p style="font-size: 9px; color: #666; margin-top: 3px;">NIP/NUPTK</p>
+=======
+                <p>Mengetahui,</p>
+                <p><strong>Kepala Sekolah</strong></p>
+                <div class="signature-line">
+                    <p>(...........................)</p>
+                </div>
+            </div>
+            <div class="signature-box">
+                <p>{{ now()->translatedFormat('d F Y') }}</p>
+                <p><strong>Admin</strong></p>
+                <div class="signature-line">
+                    <p>(...........................)</p>
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
                 </div>
             </div>
         </div>

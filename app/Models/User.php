@@ -178,6 +178,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(TaskSubmission::class);
     }
+<<<<<<< HEAD
 
     public function teacher()
     {
@@ -188,4 +189,6 @@ class User extends Authenticatable
     {
         return $this->hasOne(Student::class);
     }
+=======
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
 }

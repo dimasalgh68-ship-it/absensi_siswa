@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "E-ABSENSI",
   "short_name": "E-ABSENSI",
   "description": "Sistem Absensi Digital Modern dengan face recognition dan GPS tracking",
@@ -6,10 +7,20 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#009ee0",
+=======
+  "name": "Sistem Absensi Siswa",
+  "short_name": "Absensi",
+  "description": "Aplikasi absensi siswa dengan face recognition dan GPS tracking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
   "orientation": "portrait",
   "scope": "/",
   "icons": [
     {
+<<<<<<< HEAD
       "src": "/pwa-icons/android-launchericon-48-48.png",
       "sizes": "48x48",
       "type": "image/png",
@@ -35,12 +46,55 @@
     },
     {
       "src": "/pwa-icons/android-launchericon-192-192.png",
+=======
+      "src": "/pwa-icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-192x192.png",
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
+<<<<<<< HEAD
       "src": "/pwa-icons/android-launchericon-512-512.png",
+=======
+      "src": "/pwa-icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icons/icon-512x512.png",
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -54,7 +108,11 @@
       "url": "/face-attendance",
       "icons": [
         {
+<<<<<<< HEAD
           "src": "/pwa-icons/android-launchericon-192-192.png",
+=======
+          "src": "/pwa-icons/icon-192x192.png",
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -67,7 +125,11 @@
       "url": "/attendance-history",
       "icons": [
         {
+<<<<<<< HEAD
           "src": "/pwa-icons/android-launchericon-192-192.png",
+=======
+          "src": "/pwa-icons/icon-192x192.png",
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
           "sizes": "192x192",
           "type": "image/png"
         }
@@ -80,7 +142,11 @@
       "url": "/face-registration",
       "icons": [
         {
+<<<<<<< HEAD
           "src": "/pwa-icons/android-launchericon-192-192.png",
+=======
+          "src": "/pwa-icons/icon-192x192.png",
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
           "sizes": "192x192",
           "type": "image/png"
         }

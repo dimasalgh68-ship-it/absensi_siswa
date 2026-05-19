@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Absensi Siswa') }}</title>
+    <title><?php echo e(config('app.name', 'Absensi Siswa')); ?></title>
     
     <style>
         * {
@@ -115,11 +115,7 @@
             height: auto;
             position: relative;
             z-index: 1;
-<<<<<<< HEAD
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-=======
             filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1)) brightness(0) invert(1);
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
         }
 
         .app-name {
@@ -361,16 +357,13 @@
         <!-- Logo -->
         <div class="logo-container">
             <div class="logo-wrapper">
-                @php
+                <?php
                     $customLogo = \App\Models\Setting::logo();
-                @endphp
+                ?>
 
-                @if($customLogo)
-                    <img src="{{ $customLogo }}" alt="{{ \App\Models\Setting::appName() }}" style="width: 80%; height: 80%; object-fit: contain;" />
-                @else
-<<<<<<< HEAD
-                    <img src="/logo-pin.svg" alt="E-ABSENSI" style="width: 80%; height: 80%; object-fit: contain;" />
-=======
+                <?php if($customLogo): ?>
+                    <img src="<?php echo e($customLogo); ?>" alt="<?php echo e(\App\Models\Setting::appName()); ?>" style="width: 80%; height: 80%; object-fit: contain;" />
+                <?php else: ?>
                     <svg viewBox="0 0 1024 204" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
                       <path d="M58.967,103.477c-7.745,-7.458 -7.979,-19.775 -0.529,-27.521c7.454,-7.75 19.775,-7.983 27.525,-0.529l21.129,20.304l51.934,-53.404c7.491,-7.687 19.816,-7.867 27.5,-0.371c7.708,7.492 7.883,19.817 0.391,27.525l-65.295,67.113l-0.042,0.058c-7.45,7.746 -19.775,7.979 -27.521,0.529l-35.092,-33.704Z" style="fill:#009ee0;"/>
                       <path d="M103.214,0.019c11.562,0.175 20.796,9.679 20.616,21.246c-0.175,11.562 -9.7,20.791 -21.262,20.616c-3.479,-0.058 -7.063,0.196 -10.717,0.8c-3.383,0.55 -6.866,1.446 -10.391,2.7c-11.946,4.267 -21.921,12.129 -28.867,22.109c-6.988,10.033 -10.9,22.158 -10.725,34.87c0.175,12.7 4.425,24.709 11.679,34.55c7.183,9.759 17.371,17.334 29.5,21.284c12.108,3.929 24.846,3.796 36.463,0.112c11.637,-3.691 22.145,-10.896 29.737,-21.046c6.938,-9.254 20.063,-11.129 29.317,-4.183c9.237,6.925 11.112,20.05 4.166,29.304c-13.045,17.425 -30.887,29.734 -50.583,35.971c-19.717,6.242 -41.371,6.45 -62.067,-0.271c-20.658,-6.708 -38.05,-19.679 -50.354,-36.387c-12.246,-16.621 -19.425,-37.046 -19.716,-58.838c-0.296,-21.754 6.32,-42.371 18.112,-59.337c11.813,-16.996 28.854,-30.392 49.392,-37.709c5.696,-2.016 11.604,-3.52 17.608,-4.495c5.942,-0.984 12.008,-1.413 18.092,-1.296" style="fill:#009ee0;"/>
@@ -383,19 +376,13 @@
                       <path d="M936.087,152.672c8.313,-0 11.021,-3.288 11.021,-7.542c0,-3.667 -2.321,-6.179 -6.958,-8.117l-15.663,-6.183c-18.17,-7.154 -27.066,-18.363 -27.066,-30.742c-0,-15.271 13.341,-30.35 39.437,-30.35c13.921,0 25.904,2.509 33.446,9.275c2.321,2.129 3.671,5.417 3.671,8.317c-0,6.187 -4.638,10.437 -10.633,10.437c-5.8,0 -9.275,-1.741 -13.917,-3.091c-4.638,-1.354 -9.083,-1.934 -12.179,-1.934c-6.763,0 -10.054,2.709 -10.054,7.346c-0,3.288 1.741,5.996 6.962,7.925l18.363,7.542c18.945,7.542 24.166,18.367 24.166,28.617c0,16.62 -13.341,31.504 -41.371,31.504c-14.108,-0 -26.679,-3.475 -35.375,-8.692c-4.833,-2.904 -7.345,-6.767 -7.345,-10.637c-0,-6.188 4.637,-11.017 10.629,-11.017c5.8,-0 8.891,2.512 15.471,4.446c5.02,1.546 12.175,2.896 17.395,2.896" style="fill:#009ee0;fill-rule:nonzero;"/>
                       <path d="M1021.35,166.205c0,5.029 -2.517,7.542 -7.346,7.542l-12.758,-0c-5.025,-0 -7.542,-2.513 -7.542,-7.542l0,-82.55c0,-7.733 6.192,-13.917 13.729,-13.917c7.734,0 13.917,6.184 13.917,13.917l0,82.55Zm-29.967,-122.954c0,-8.696 7.155,-15.85 16.05,-15.85c8.696,-0 15.855,7.154 15.855,15.85c-0,8.896 -7.159,16.05 -15.855,16.05c-8.895,-0 -16.05,-7.154 -16.05,-16.05" style="fill:#009ee0;fill-rule:nonzero;"/>
                     </svg>
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- App Name -->
-<<<<<<< HEAD
-        <h1 class="app-name">E-ABSENSI</h1>
-        <p class="app-tagline">Sistem Absensi Digital Modern</p>
-=======
-        <h1 class="app-name">{{ \App\Models\Setting::get('app_name', config('app.name')) }}</h1>
+        <h1 class="app-name"><?php echo e(\App\Models\Setting::get('app_name', config('app.name'))); ?></h1>
         <p class="app-tagline">Sistem Absensi Modern & Terpercaya</p>
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
 
         <!-- Loading -->
         <div class="loading-container">
@@ -418,7 +405,8 @@
 
         <!-- Version Info -->
         <div class="version-info">
-            Version 2.0 • © {{ date('Y') }}
+            Version 2.0 • © <?php echo e(date('Y')); ?>
+
         </div>
     </div>
 
@@ -428,9 +416,10 @@
             document.getElementById('splash').classList.add('fade-out');
             
             setTimeout(function() {
-                window.location.href = '{{ route("login") }}';
+                window.location.href = '<?php echo e(route("login")); ?>';
             }, 600);
         }, 2500);
     </script>
 </body>
 </html>
+<?php /**PATH C:\laragon\www\absensi-siswa\resources\views/splash.blade.php ENDPATH**/ ?>

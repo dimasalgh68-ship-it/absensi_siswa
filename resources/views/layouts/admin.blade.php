@@ -57,13 +57,20 @@
         #accordionSidebar {
             background: var(--sidebar-bg) !important;
             box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+<<<<<<< HEAD
             transition: width var(--transition-speed) ease, left var(--transition-speed) ease;
+=======
+            transition: all 0.3s ease;
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
             z-index: 1025 !important;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
             overflow-x: hidden;
+<<<<<<< HEAD
             width: var(--sidebar-width) !important;
+=======
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
         }
         
         /* Custom scrollbar for sidebar */
@@ -155,19 +162,30 @@
         
         /* Topbar positioning - don't overlap sidebar */
         .topbar {
+<<<<<<< HEAD
             left: var(--sidebar-width) !important;
             transition: left var(--transition-speed) ease;
+=======
+            left: 224px !important; /* Sidebar width */
+            transition: left 0.3s ease;
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
         }
         
         /* Content wrapper - don't overlap sidebar */
         #content-wrapper {
+<<<<<<< HEAD
             margin-left: var(--sidebar-width);
             transition: margin-left var(--transition-speed) ease;
             
+=======
+            margin-left: 224px; /* Sidebar width */
+            transition: margin-left 0.3s ease;
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
         }
         
         /* When sidebar is toggled (collapsed) */
         .sidebar-toggled .topbar {
+<<<<<<< HEAD
             left: 104px !important;
         }
         
@@ -193,6 +211,13 @@
         }
         .sidebar-toggled .sidebar-resizer {
             display: none; /* Hide resizer when collapsed */
+=======
+            left: 0 !important;
+        }
+        
+        .sidebar-toggled #content-wrapper {
+            margin-left: 0;
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
         }
         
         /* Mobile - topbar full width, content no margin */

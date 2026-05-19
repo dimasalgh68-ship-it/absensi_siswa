@@ -7,11 +7,11 @@
 
     <!-- Mobile Branding (Logo & Name) -->
     <div class="d-flex d-md-none align-items-center mr-auto">
-        @if (App\Models\Setting::get('app_logo'))
-            <img src="{{ App\Models\Setting::logo() }}" alt="Logo" class="rounded shadow-sm" style="height: 32px; width: 32px; object-fit: contain; background: white; padding: 2px;">
-        @endif
+        <?php if(App\Models\Setting::get('app_logo')): ?>
+            <img src="<?php echo e(App\Models\Setting::logo()); ?>" alt="Logo" class="rounded shadow-sm" style="height: 32px; width: 32px; object-fit: contain; background: white; padding: 2px;">
+        <?php endif; ?>
         <div class="ml-2 flex flex-col">
-            <span class="text-slate-800 font-weight-bold small line-height-1" style="font-size: 0.85rem;">{{ App\Models\Setting::appName() }}</span>
+            <span class="text-slate-800 font-weight-bold small line-height-1" style="font-size: 0.85rem;"><?php echo e(App\Models\Setting::appName()); ?></span>
             <span class="text-slate-400 extra-small font-weight-600" style="font-size: 0.6rem;">Mobile Dashboard</span>
         </div>
     </div>
@@ -71,7 +71,7 @@
                             </div>
                         </div>
                         <div class="overflow-hidden">
-                            <div class="small text-muted mb-1">{{ date('H:i') }} • Hari Ini</div>
+                            <div class="small text-muted mb-1"><?php echo e(date('H:i')); ?> • Hari Ini</div>
                             <span class="font-weight-600 text-slate-700 d-block text-truncate">Laporan absensi bulanan tersedia</span>
                         </div>
                     </a>
@@ -99,21 +99,22 @@
                     class="nav-link d-flex align-items-center px-2 py-1 user-nav-link rounded-pill bg-transparent border-0" 
                     @click="open = !open">
                 <div class="text-right mr-3 d-none d-lg-inline">
-                    <span class="d-block text-slate-800 font-weight-bold small line-height-1">{{ Auth::user()->name }}</span>
-                    <span class="text-slate-400 extra-small font-weight-600">{{ Auth::user()->isTeacher ? 'Tenaga Pendidik' : 'Administrator' }}</span>
+                    <span class="d-block text-slate-800 font-weight-bold small line-height-1"><?php echo e(Auth::user()->name); ?></span>
+                    <span class="text-slate-400 extra-small font-weight-600">Administrator</span>
                 </div>
                 <div class="profile-avatar shadow-sm">
-                    @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
+                    <?php if(Laravel\Jetstream\Jetstream::managesProfilePhotos()): ?>
                         <img class="img-profile rounded-circle" 
-                             src="{{ Auth::user()->profile_photo_url }}" 
-                             alt="{{ Auth::user()->name }}" 
+                             src="<?php echo e(Auth::user()->profile_photo_url); ?>" 
+                             alt="<?php echo e(Auth::user()->name); ?>" 
                              style="width: 34px; height: 34px; object-fit: cover; border: 2px solid white;">
-                    @else
+                    <?php else: ?>
                         <div class="rounded-circle d-flex align-items-center justify-content-center text-white font-weight-bold shadow-sm" 
                              style="width: 34px; height: 34px; background: var(--primary-color); font-size: 0.9rem; border: 2px solid white;">
-                            {{ substr(Auth::user()->name, 0, 1) }}
+                            <?php echo e(substr(Auth::user()->name, 0, 1)); ?>
+
                         </div>
-                    @endif
+                    <?php endif; ?>
                     <div class="status-dot shadow-sm"></div>
                 </div>
                 <i class="fas fa-chevron-down ml-2 extra-small text-slate-400 transition-all" :class="{ 'rotate-180': open }"></i>
@@ -134,36 +135,27 @@
                 <!-- User Info Card -->
                 <div class="px-3 py-3 mb-2 bg-slate-50 rounded-xl d-flex align-items-center">
                     <div class="mr-3">
-                        @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
-                            <img class="rounded-circle shadow-sm border border-white" src="{{ Auth::user()->profile_photo_url }}" style="width: 48px; height: 48px; object-fit: cover;">
-                        @else
+                        <?php if(Laravel\Jetstream\Jetstream::managesProfilePhotos()): ?>
+                            <img class="rounded-circle shadow-sm border border-white" src="<?php echo e(Auth::user()->profile_photo_url); ?>" style="width: 48px; height: 48px; object-fit: cover;">
+                        <?php else: ?>
                             <div class="rounded-circle bg-white d-flex align-items-center justify-content-center text-primary font-weight-bold shadow-sm" style="width: 48px; height: 48px; font-size: 1.2rem;">
-                                {{ substr(Auth::user()->name, 0, 1) }}
+                                <?php echo e(substr(Auth::user()->name, 0, 1)); ?>
+
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                     <div class="overflow-hidden text-left flex-grow-1">
-                        <h6 class="p-0 text-slate-800 font-weight-bold mb-1 d-block text-truncate" style="font-size: 0.9rem;">{{ Auth::user()->name }}</h6>
-                        <p class="mb-0 text-slate-500 extra-small tracking-wide text-truncate" style="font-size: 0.7rem;">{{ Auth::user()->email }}</p>
-                        @if(Auth::user()->isTeacher)
-                            <span class="badge mt-1 px-2 py-1" style="font-size: 0.65rem; background: rgba(5, 150, 105, 0.1); color: var(--primary-color); border: 1px solid rgba(5, 150, 105, 0.2);">
-                                <i class="fas fa-chalkboard-teacher mr-1"></i>Guru
-                            </span>
-                        @else
-                            <span class="badge badge-primary mt-1 px-2 py-1" style="font-size: 0.65rem; background: rgba(79, 70, 229, 0.1); color: var(--primary-color); border: 1px solid rgba(79, 70, 229, 0.2);">
-                                <i class="fas fa-shield-alt mr-1"></i>Administrator
-                            </span>
-                        @endif
+                        <h6 class="p-0 text-slate-800 font-weight-bold mb-1 d-block text-truncate" style="font-size: 0.9rem;"><?php echo e(Auth::user()->name); ?></h6>
+                        <p class="mb-0 text-slate-500 extra-small tracking-wide text-truncate" style="font-size: 0.7rem;"><?php echo e(Auth::user()->email); ?></p>
+                        <span class="badge badge-primary mt-1 px-2 py-1" style="font-size: 0.65rem; background: rgba(79, 70, 229, 0.1); color: var(--primary-color); border: 1px solid rgba(79, 70, 229, 0.2);">
+                            <i class="fas fa-shield-alt mr-1"></i>Administrator
+                        </span>
                     </div>
                 </div>
                 
                 <!-- Menu Items -->
                 <div class="dropdown-items">
-<<<<<<< HEAD
-                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route(Auth::user()->isTeacher ? 'teacher.profile' : 'admin.profile') }}">
-=======
-                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.profile') }}">
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
+                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="<?php echo e(route('admin.profile')); ?>">
                         <div class="item-icon-container mr-3 bg-blue-50 text-blue-600 rounded-lg">
                             <i class="fas fa-user-circle fa-sm"></i>
                         </div>
@@ -173,8 +165,7 @@
                         </div>
                     </a>
                     
-                    @if(Auth::user()->isAdmin)
-                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.settings') }}">
+                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="<?php echo e(route('admin.settings')); ?>">
                         <div class="item-icon-container mr-3 bg-indigo-50 text-indigo-600 rounded-lg">
                             <i class="fas fa-sliders-h fa-sm"></i>
                         </div>
@@ -183,9 +174,8 @@
                             <span class="text-slate-400 extra-small">Konfigurasi sistem</span>
                         </div>
                     </a>
-                    @endif
                     
-                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="{{ route('admin.dashboard') }}">
+                    <a class="dropdown-item rounded-xl py-2 px-3 d-flex align-items-center transition-all hover-translate-x" href="<?php echo e(route('admin.dashboard')); ?>">
                         <div class="item-icon-container mr-3 bg-emerald-50 text-emerald-600 rounded-lg">
                             <i class="fas fa-th-large fa-sm"></i>
                         </div>
@@ -323,3 +313,4 @@
         window.searchShortcutInit = true;
     }
 </script>
+<?php /**PATH C:\laragon\www\absensi-siswa\resources\views/layouts/partials/admin-topbar.blade.php ENDPATH**/ ?>

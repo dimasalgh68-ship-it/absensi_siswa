@@ -1,4 +1,13 @@
-<x-app-layout>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     <style>
         /* Smooth scrolling optimization */
         html {
@@ -143,11 +152,12 @@
         }
     </style>
     
-    <x-slot name="header">
+     <?php $__env->slot('header', null, []); ?> 
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Absensi Face Recognition') }}
+            <?php echo e(__('Absensi Face Recognition')); ?>
+
         </h2>
-    </x-slot>
+     <?php $__env->endSlot(); ?>
 
     <!-- Loading Screen -->
     <div id="loadingScreen">
@@ -169,14 +179,14 @@
         </div>
     </div>
 
-    @php
+    <?php
         $faceThreshold = \App\Models\Setting::get('face_similarity_threshold', 70);
         $distanceThreshold = (100 - $faceThreshold) / 100; // Convert percentage to distance
-    @endphp
+    ?>
 
     <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if (!$hasFaceRegistration)
+            <?php if(!$hasFaceRegistration): ?>
                 <!-- Belum registrasi wajah -->
                 <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-400 text-yellow-800 dark:text-yellow-200 px-6 py-4 rounded-lg mb-6">
                     <div class="flex items-center">
@@ -189,57 +199,56 @@
                         </div>
                     </div>
                     <div class="mt-4">
-                        <a href="{{ route('face-registration.index') }}" 
+                        <a href="<?php echo e(route('face-registration.index')); ?>" 
                            class="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                             Daftar Sekarang
                         </a>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
 
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6">
                     <!-- Status Absensi Hari Ini -->
-                    @if ($todayAttendance)
+                    <?php if($todayAttendance): ?>
                         <div class="mb-6 bg-green-50 dark:bg-green-900 p-4 rounded-lg">
                             <h3 class="font-bold text-green-900 dark:text-green-100 mb-2">Status Absensi Hari Ini</h3>
                             <div class="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <span class="text-green-700 dark:text-green-300">Absen Masuk:</span>
                                     <span class="font-bold text-green-900 dark:text-green-100">
-                                        {{ $todayAttendance->time_in ?? '-' }}
+                                        <?php echo e($todayAttendance->time_in ?? '-'); ?>
+
                                     </span>
                                 </div>
                                 <div>
                                     <span class="text-green-700 dark:text-green-300">Absen Keluar:</span>
                                     <span class="font-bold text-green-900 dark:text-green-100">
-                                        {{ $todayAttendance->time_out ?? '-' }}
+                                        <?php echo e($todayAttendance->time_out ?? '-'); ?>
+
                                     </span>
                                 </div>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
                     <!-- Countdown Widget -->
-                    @php
+                    <?php
                         $shift = \App\Models\Shift::first();
                         $clockInDeadline = null;
                         $clockOutTime = null;
                         $clockInOpenTime = null;
-                        $earliestClockOutTime = null;
                         $now = \Carbon\Carbon::now();
                         $deadlineType = 'waiting';
                         
                         if ($shift) {
                             $clockInEarlyMinutes = (int) \App\Models\Setting::get('clock_in_early_minutes', 60);
                             $clockInLateMinutes = (int) \App\Models\Setting::get('clock_in_late_minutes', 120);
-                            $clockOutEarlyMinutes = (int) \App\Models\Setting::get('clock_out_early_minutes', 30);
                             $scheduleStartTime = \Carbon\Carbon::today()->setTimeFromTimeString($shift->start_time);
                             
                             $clockInOpenTime = $scheduleStartTime->copy()->subMinutes($clockInEarlyMinutes);
                             $clockInDeadline = $scheduleStartTime->copy()->addMinutes($clockInLateMinutes);
                             $clockOutTime = \Carbon\Carbon::today()->setTimeFromTimeString($shift->end_time);
-                            $earliestClockOutTime = $clockOutTime->copy()->subMinutes($clockOutEarlyMinutes);
                             
                             // Determine deadline type
                             if (!$todayAttendance) {
@@ -251,9 +260,7 @@
                                     $deadlineType = 'next_day';
                                 }
                             } elseif ($todayAttendance && !$todayAttendance->time_out) {
-                                if ($now->lt($earliestClockOutTime)) {
-                                    $deadlineType = 'waiting_clock_out';
-                                } elseif ($now->gte($earliestClockOutTime)) {
+                                if ($now->lt($clockOutTime)) {
                                     $deadlineType = 'clock_out';
                                 } else {
                                     $deadlineType = 'next_day';
@@ -262,89 +269,84 @@
                                 $deadlineType = 'next_day';
                             }
                         }
-                    @endphp
+                    ?>
 
-                    @if($shift)
+                    <?php if($shift): ?>
                     <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br 
-                                    @if($deadlineType === 'waiting') from-gray-500 to-gray-600
-                                    @elseif($deadlineType === 'clock_in') from-red-500 to-orange-500
-                                    @elseif($deadlineType === 'clock_out') from-blue-500 to-indigo-500
-                                    @else from-purple-500 to-indigo-500
-                                    @endif
+                                    <?php if($deadlineType === 'waiting'): ?> from-gray-500 to-gray-600
+                                    <?php elseif($deadlineType === 'clock_in'): ?> from-red-500 to-orange-500
+                                    <?php elseif($deadlineType === 'clock_out'): ?> from-blue-500 to-indigo-500
+                                    <?php else: ?> from-purple-500 to-indigo-500
+                                    <?php endif; ?>
                                     flex items-center justify-center text-white shadow-lg">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 </div>
                                 <div>
                                     <h3 class="font-bold text-gray-900 dark:text-white text-sm">
-                                        @if($deadlineType === 'waiting') Menunggu Waktu Absensi
-                                        @elseif($deadlineType === 'clock_in') Batas Waktu Absensi Masuk
-                                        @elseif($deadlineType === 'waiting_clock_out') Menunggu Waktu Absensi Keluar
-                                        @elseif($deadlineType === 'clock_out') Waktu Absensi Keluar
-                                        @else Absensi Besok
-                                        @endif
+                                        <?php if($deadlineType === 'waiting'): ?> Menunggu Waktu Absensi
+                                        <?php elseif($deadlineType === 'clock_in'): ?> Batas Waktu Absensi Masuk
+                                        <?php elseif($deadlineType === 'clock_out'): ?> Waktu Absensi Keluar
+                                        <?php else: ?> Absensi Besok
+                                        <?php endif; ?>
                                     </h3>
                                     <p class="text-xs text-gray-600 dark:text-gray-400">
-                                        Shift: {{ $shift->name }} ({{ $shift->start_time }} - {{ $shift->end_time }})
+                                        Shift: <?php echo e($shift->name); ?> (<?php echo e($shift->start_time); ?> - <?php echo e($shift->end_time); ?>)
                                     </p>
                                 </div>
                             </div>
                             <div class="text-right">
                                 <div id="scan-countdown-display" class="text-2xl font-bold 
-                                    @if($deadlineType === 'waiting') text-gray-600 dark:text-gray-400
-                                    @elseif($deadlineType === 'clock_in') text-red-600 dark:text-red-400
-                                    @elseif($deadlineType === 'waiting_clock_out') text-orange-600 dark:text-orange-400
-                                    @elseif($deadlineType === 'clock_out') text-blue-600 dark:text-blue-400
-                                    @else text-purple-600 dark:text-purple-400
-                                    @endif
+                                    <?php if($deadlineType === 'waiting'): ?> text-gray-600 dark:text-gray-400
+                                    <?php elseif($deadlineType === 'clock_in'): ?> text-red-600 dark:text-red-400
+                                    <?php elseif($deadlineType === 'clock_out'): ?> text-blue-600 dark:text-blue-400
+                                    <?php else: ?> text-purple-600 dark:text-purple-400
+                                    <?php endif; ?>
                                     tabular-nums font-mono">--:--:--</div>
                                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">
-                                    @if($deadlineType === 'waiting' || $deadlineType === 'waiting_clock_out') Dibuka Dalam
-                                    @else Sisa Waktu
-                                    @endif
+                                    <?php if($deadlineType === 'waiting'): ?> Dibuka Dalam
+                                    <?php else: ?> Sisa Waktu
+                                    <?php endif; ?>
                                 </p>
                             </div>
                         </div>
                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                             <div id="scan-countdown-progress" class="h-full 
-                                @if($deadlineType === 'waiting') bg-gradient-to-r from-gray-500 to-gray-600
-                                @elseif($deadlineType === 'clock_in') bg-gradient-to-r from-red-500 to-orange-500
-                                @elseif($deadlineType === 'waiting_clock_out') bg-gradient-to-r from-orange-500 to-yellow-500
-                                @elseif($deadlineType === 'clock_out') bg-gradient-to-r from-blue-500 to-indigo-500
-                                @else bg-gradient-to-r from-purple-500 to-indigo-500
-                                @endif
+                                <?php if($deadlineType === 'waiting'): ?> bg-gradient-to-r from-gray-500 to-gray-600
+                                <?php elseif($deadlineType === 'clock_in'): ?> bg-gradient-to-r from-red-500 to-orange-500
+                                <?php elseif($deadlineType === 'clock_out'): ?> bg-gradient-to-r from-blue-500 to-indigo-500
+                                <?php else: ?> bg-gradient-to-r from-purple-500 to-indigo-500
+                                <?php endif; ?>
                                 transition-all duration-1000" style="width: 100%"></div>
                         </div>
                         <div class="mt-3 flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                            <span>Buka: <strong class="text-green-600 dark:text-green-400">{{ $clockInOpenTime->format('H:i') }}</strong></span>
-                            <span>Deadline: <strong class="text-red-600 dark:text-red-400">{{ $clockInDeadline->format('H:i') }}</strong></span>
-                            <span>Keluar: <strong class="text-blue-600 dark:text-blue-400">{{ $earliestClockOutTime->format('H:i') }} - {{ $clockOutTime->format('H:i') }}</strong></span>
+                            <span>Buka: <strong class="text-green-600 dark:text-green-400"><?php echo e($clockInOpenTime->format('H:i')); ?></strong></span>
+                            <span>Deadline: <strong class="text-red-600 dark:text-red-400"><?php echo e($clockInDeadline->format('H:i')); ?></strong></span>
+                            <span>Keluar: <strong class="text-blue-600 dark:text-blue-400"><?php echo e($clockOutTime->format('H:i')); ?></strong></span>
                         </div>
                     </div>
 
-                    @push('scripts')
+                    <?php $__env->startPush('scripts'); ?>
                     <script>
                         // Scan Page Countdown
-                        @php
+                        <?php
                             $targetTime = null;
                             if ($deadlineType === 'waiting') {
                                 $targetTime = $clockInOpenTime;
                             } elseif ($deadlineType === 'clock_in') {
                                 $targetTime = $clockInDeadline;
-                            } elseif ($deadlineType === 'waiting_clock_out') {
-                                $targetTime = $earliestClockOutTime;
                             } elseif ($deadlineType === 'clock_out') {
                                 $targetTime = $clockOutTime;
                             } else {
                                 $targetTime = $clockInOpenTime->copy()->addDay();
                             }
-                        @endphp
+                        ?>
                         
-                        const scanDeadlineTime = new Date('{{ $targetTime->format('Y-m-d H:i:s') }}').getTime();
-                        const scanDeadlineType = '{{ $deadlineType }}';
-                        const scanStartOfDay = new Date('{{ $targetTime->copy()->startOfDay()->format('Y-m-d H:i:s') }}').getTime();
+                        const scanDeadlineTime = new Date('<?php echo e($targetTime->format('Y-m-d H:i:s')); ?>').getTime();
+                        const scanDeadlineType = '<?php echo e($deadlineType); ?>';
+                        const scanStartOfDay = new Date('<?php echo e($targetTime->copy()->startOfDay()->format('Y-m-d H:i:s')); ?>').getTime();
                         const scanTotalDuration = scanDeadlineTime - scanStartOfDay;
                         
                         function updateScanCountdown() {
@@ -403,8 +405,8 @@
                             
                             // Clock In button logic
                             if (clockInDisabledByTime) {
-                                const clockInOpenTime = new Date('{{ $clockInOpenTime->format('Y-m-d H:i:s') }}').getTime();
-                                const clockInDeadlineTime = new Date('{{ $clockInDeadline->format('Y-m-d H:i:s') }}').getTime();
+                                const clockInOpenTime = new Date('<?php echo e($clockInOpenTime->format('Y-m-d H:i:s')); ?>').getTime();
+                                const clockInDeadlineTime = new Date('<?php echo e($clockInDeadline->format('Y-m-d H:i:s')); ?>').getTime();
                                 
                                 if (now >= clockInOpenTime && now < clockInDeadlineTime) {
                                     // Time to enable clock in
@@ -423,23 +425,17 @@
                             
                             // Clock Out button logic
                             if (clockOutDisabledByTime) {
-                                const earliestClockOutTime = new Date('{{ $earliestClockOutTime->format('Y-m-d H:i:s') }}').getTime();
+                                const clockOutTime = new Date('<?php echo e($clockOutTime->format('Y-m-d H:i:s')); ?>').getTime();
                                 
-                                @if($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out)
-                                if (now >= earliestClockOutTime) {
+                                <?php if($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out): ?>
+                                if (now < clockOutTime) {
                                     // Time to enable clock out
                                     clockOutBtn.disabled = false;
                                     clockOutBtn.removeAttribute('data-reason');
                                     clockOutBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
                                     clockOutBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                                    
-                                    // Show notification
-                                    if (window.scanClockOutNotificationShown !== true) {
-                                        speak('Waktu absensi keluar telah dibuka. Anda dapat melakukan absensi keluar sekarang.');
-                                        window.scanClockOutNotificationShown = true;
-                                    }
                                 }
-                                @endif
+                                <?php endif; ?>
                             }
                         }
                         
@@ -447,8 +443,8 @@
                         setInterval(updateButtonStates, 1000);
                         updateButtonStates(); // Initial check
                     </script>
-                    @endpush
-                    @endif
+                    <?php $__env->stopPush(); ?>
+                    <?php endif; ?>
 
                     <div class="max-w-3xl mx-auto">
                         <!-- Camera Preview -->
@@ -483,42 +479,38 @@
                         <!-- Action Buttons -->
                         <div class="grid grid-cols-2 gap-4">
                             <button id="clockInBtn" 
-                                    @if (!$hasFaceRegistration || ($todayAttendance && $todayAttendance->time_in)) disabled 
-                                    @elseif($deadlineType === 'waiting' || $deadlineType === 'next_day') disabled data-reason="time"
-                                    @endif
+                                    <?php if(!$hasFaceRegistration || ($todayAttendance && $todayAttendance->time_in)): ?> disabled 
+                                    <?php elseif($deadlineType === 'waiting' || $deadlineType === 'next_day'): ?> disabled data-reason="time"
+                                    <?php endif; ?>
                                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition relative group">
                                 <span class="flex items-center justify-center gap-2">
                                     🕐 Absen Masuk
                                 </span>
-                                @if($deadlineType === 'waiting')
+                                <?php if($deadlineType === 'waiting'): ?>
                                 <span class="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
                                     Belum Waktunya
                                 </span>
-                                @endif
+                                <?php endif; ?>
                             </button>
                             
                             <button id="clockOutBtn" 
-                                    @if (!$hasFaceRegistration || !$todayAttendance || !$todayAttendance->time_in || ($todayAttendance && $todayAttendance->time_out)) disabled 
-                                    @elseif($deadlineType === 'waiting_clock_out') disabled data-reason="time"
-                                    @endif
+                                    <?php if(!$hasFaceRegistration || !$todayAttendance || !$todayAttendance->time_in || ($todayAttendance && $todayAttendance->time_out)): ?> disabled 
+                                    <?php elseif($deadlineType !== 'clock_out'): ?> disabled data-reason="time"
+                                    <?php endif; ?>
                                     class="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition relative group">
                                 <span class="flex items-center justify-center gap-2">
                                     🕐 Absen Keluar
                                 </span>
-                                @if($deadlineType === 'waiting_clock_out')
-                                <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                                    Belum Waktunya
-                                </span>
-                                @elseif($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out && $deadlineType === 'clock_out')
+                                <?php if($todayAttendance && $todayAttendance->time_in && !$todayAttendance->time_out && $deadlineType === 'clock_out'): ?>
                                 <span class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
                                     Aktif
                                 </span>
-                                @endif
+                                <?php endif; ?>
                             </button>
                         </div>
 
                         <!-- Time Status Info -->
-                        @if($deadlineType === 'waiting')
+                        <?php if($deadlineType === 'waiting'): ?>
                         <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                             <div class="flex items-start gap-3">
                                 <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,13 +519,13 @@
                                 <div>
                                     <p class="font-bold text-yellow-800 dark:text-yellow-200 text-sm">Belum Waktunya Absen</p>
                                     <p class="text-yellow-700 dark:text-yellow-300 text-xs mt-1">
-                                        Absensi akan dibuka pada <strong>{{ $clockInOpenTime->format('H:i') }} WIB</strong>. 
+                                        Absensi akan dibuka pada <strong><?php echo e($clockInOpenTime->format('H:i')); ?> WIB</strong>. 
                                         Silakan tunggu countdown di atas.
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        @elseif($deadlineType === 'clock_in' && !$todayAttendance)
+                        <?php elseif($deadlineType === 'clock_in' && !$todayAttendance): ?>
                         <div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                             <div class="flex items-start gap-3">
                                 <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,27 +534,12 @@
                                 <div>
                                     <p class="font-bold text-green-800 dark:text-green-200 text-sm">Siap Absen Masuk</p>
                                     <p class="text-green-700 dark:text-green-300 text-xs mt-1">
-                                        Anda dapat melakukan absensi masuk sekarang. Deadline: <strong>{{ $clockInDeadline->format('H:i') }} WIB</strong>
+                                        Anda dapat melakukan absensi masuk sekarang. Deadline: <strong><?php echo e($clockInDeadline->format('H:i')); ?> WIB</strong>
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        @elseif($deadlineType === 'waiting_clock_out' && $todayAttendance && !$todayAttendance->time_out)
-                        <div class="mt-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-                            <div class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div>
-                                    <p class="font-bold text-orange-800 dark:text-orange-200 text-sm">Menunggu Waktu Absen Keluar</p>
-                                    <p class="text-orange-700 dark:text-orange-300 text-xs mt-1">
-                                        Absensi keluar akan dibuka pada <strong>{{ $earliestClockOutTime->format('H:i') }} WIB</strong>. 
-                                        Anda sudah absen masuk pada <strong>{{ $todayAttendance->time_in }}</strong>.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        @elseif($deadlineType === 'clock_out' && $todayAttendance && !$todayAttendance->time_out)
+                        <?php elseif($deadlineType === 'clock_out' && $todayAttendance && !$todayAttendance->time_out): ?>
                         <div class="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                             <div class="flex items-start gap-3">
                                 <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -571,12 +548,12 @@
                                 <div>
                                     <p class="font-bold text-blue-800 dark:text-blue-200 text-sm">Siap Absen Keluar</p>
                                     <p class="text-blue-700 dark:text-blue-300 text-xs mt-1">
-                                        Anda dapat melakukan absensi keluar sekarang. Jam keluar: <strong>{{ $clockOutTime->format('H:i') }} WIB</strong>
+                                        Anda dapat melakukan absensi keluar sekarang. Jam keluar: <strong><?php echo e($clockOutTime->format('H:i')); ?> WIB</strong>
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        @endif
+                        <?php endif; ?>
 
                         <!-- Location Info -->
                         <div id="locationInfo" class="hidden mb-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
@@ -613,7 +590,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    <?php $__env->startPush('scripts'); ?>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -755,17 +732,7 @@
                     registeredDescriptor = new Float32Array(data.descriptor);
                     console.log('Registered face loaded successfully');
                     updateLoadingProgress(4); // Step 5: Ready!
-<<<<<<< HEAD
-                    setTimeout(() => {
-                        hideLoadingScreen();
-                        // Speak welcome message after loading completes
-                        setTimeout(() => {
-                            speak('Sistem siap. Posisikan wajah Anda di depan kamera untuk melakukan absensi.');
-                        }, 500);
-                    }, 800);
-=======
                     setTimeout(hideLoadingScreen, 800);
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
                 } else {
                     // This shouldn't happen since we checked in initialize()
                     throw new Error('Face descriptor not found');
@@ -811,31 +778,6 @@
                     if (overlay.width !== video.videoWidth || overlay.height !== video.videoHeight) {
                         overlay.width = video.videoWidth;
                         overlay.height = video.videoHeight;
-<<<<<<< HEAD
-                    }
-                    
-                    ctx.clearRect(0, 0, overlay.width, overlay.height);
-                
-                    if (!detection) {
-                        // No face detected
-                        if (faceDetected) {
-                            // Face was detected before, now lost
-                            hasSpokenFaceDetected = false;
-                            faceDetected = false;
-                            faceStatusIcon.textContent = '❌';
-                            faceStatusText.textContent = 'Wajah tidak terdeteksi';
-                            faceStatus.className = 'absolute top-4 left-4 bg-red-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
-                        }
-                    } else {
-                        // Face detected - no audio notification
-                        if (!faceDetected) {
-                            faceDetected = true;
-                            faceStatusIcon.textContent = '✅';
-                            faceStatusText.textContent = 'Wajah terdeteksi - Siap!';
-                            faceStatus.className = 'absolute top-4 left-4 bg-green-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
-                        }
-                        
-=======
                     }
                     
                     ctx.clearRect(0, 0, overlay.width, overlay.height);
@@ -859,7 +801,6 @@
                         faceStatus.className = 'absolute top-4 left-4 bg-green-600/90 text-white px-4 py-2 rounded-lg text-sm font-semibold';
                     }
                     
->>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
                         // Draw face box
                         drawFaceBox(ctx, detection.detection.box);
                     }
@@ -986,8 +927,8 @@
                 console.log('Face verification:', { distance, similarity: similarity.toFixed(2) });
 
                 // Get threshold from server
-                const thresholdPercentage = {{ $faceThreshold }};
-                const distanceThreshold = {{ $distanceThreshold }};
+                const thresholdPercentage = <?php echo e($faceThreshold); ?>;
+                const distanceThreshold = <?php echo e($distanceThreshold); ?>;
 
                 // Check if match
                 if (distance > distanceThreshold) {
@@ -1032,7 +973,7 @@
             }
         }
 
-        // Get GPS location with enhanced data for anti-spoofing
+        // Get GPS location
         function getLocation() {
             if (!navigator.geolocation) {
                 showError('Browser Anda tidak mendukung GPS');
@@ -1044,17 +985,11 @@
                 (position) => {
                     currentPosition = {
                         latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy,
-                        altitude: position.coords.altitude,
-                        altitudeAccuracy: position.coords.altitudeAccuracy,
-                        heading: position.coords.heading,
-                        speed: position.coords.speed,
-                        timestamp: position.timestamp
+                        longitude: position.coords.longitude
                     };
                     
                     gpsIcon.textContent = '✅';
-                    gpsText.textContent = `Lokasi terdeteksi (±${Math.round(position.coords.accuracy)}m)`;
+                    gpsText.textContent = 'Lokasi terdeteksi';
                     gpsStatus.classList.remove('bg-opacity-50');
                     gpsStatus.classList.add('bg-green-600');
                     
@@ -1062,25 +997,12 @@
                         locationInfo.classList.remove('hidden');
                         locationText.textContent = `Lat: ${currentPosition.latitude.toFixed(6)}, Long: ${currentPosition.longitude.toFixed(6)}`;
                     }
-
-                    // Log GPS data for debugging
-                    console.log('GPS Data:', {
-                        accuracy: position.coords.accuracy,
-                        altitude: position.coords.altitude,
-                        speed: position.coords.speed,
-                        timestamp: position.timestamp
-                    });
                 },
                 (error) => {
                     gpsIcon.textContent = '❌';
                     gpsText.textContent = 'GPS tidak tersedia';
                     gpsStatus.classList.add('bg-red-600');
                     showError('Tidak dapat mengakses GPS. Pastikan GPS aktif dan izin lokasi diberikan.');
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
                 }
             );
         }
@@ -1133,25 +1055,10 @@
                 formData.append('type', type);
                 formData.append('similarity', verification.similarity);
                 formData.append('verified_in_browser', 'true');
-                
-                // Add anti-spoofing GPS data
-                if (currentPosition.accuracy !== null && currentPosition.accuracy !== undefined) {
-                    formData.append('accuracy', currentPosition.accuracy);
-                }
-                if (currentPosition.altitude !== null && currentPosition.altitude !== undefined) {
-                    formData.append('altitude', currentPosition.altitude);
-                }
-                if (currentPosition.speed !== null && currentPosition.speed !== undefined) {
-                    formData.append('speed', currentPosition.speed);
-                }
-                if (currentPosition.timestamp) {
-                    formData.append('timestamp', Math.floor(currentPosition.timestamp / 1000));
-                }
-                
-                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('_token', '<?php echo e(csrf_token()); ?>');
 
                 try {
-                    const response = await fetch('{{ route("face-attendance.store") }}', {
+                    const response = await fetch('<?php echo e(route("face-attendance.store")); ?>', {
                         method: 'POST',
                         body: formData
                     });
@@ -1286,14 +1193,16 @@
             soundEnabled = !soundEnabled;
             soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
             soundToggle.title = soundEnabled ? 'Matikan Suara' : 'Nyalakan Suara';
-            soundToggle.classList.toggle('bg-blue-600', soundEnabled);
-            soundToggle.classList.toggle('bg-gray-600', !soundEnabled);
             
             // Cancel any ongoing speech when muting
             if (!soundEnabled) {
                 stopSpeech();
             }
-            // No audio feedback when toggling
+            
+            // Give feedback
+            if (soundEnabled) {
+                speak('Suara diaktifkan');
+            }
         });
 
         // Show error message
@@ -1465,5 +1374,15 @@
             }
         });
     </script>
-    @endpush
-</x-app-layout>
+    <?php $__env->stopPush(); ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\laragon\www\absensi-siswa\resources\views/attendances/face-scan.blade.php ENDPATH**/ ?>

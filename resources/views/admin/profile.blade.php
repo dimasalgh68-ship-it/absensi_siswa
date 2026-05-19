@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 <x-dynamic-layout>
+=======
+<x-admin-layout>
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
     <x-slot name="title">Profil Admin</x-slot>
 
     <div class="container-fluid">
@@ -188,4 +192,8 @@
         }
     </style>
     @endpush
+<<<<<<< HEAD
 </x-dynamic-layout>
+=======
+</x-admin-layout>
+>>>>>>> b7451b4dfb32aa6d059cb1d176141e6ab49a7ffd
